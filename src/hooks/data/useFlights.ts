@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { Flight } from '../../models/flight.model';
+import { DEFAULT_FLIGHT_STATUS, type Flight } from '../../models/flight.model';
+import { generateGuid } from '../generateGuid';
 
 // Fake HTTP-style in-memory service: async methods (Promise) that mimic
 // remote calls. No subscribers — callers fetch/await results. This mirrors
@@ -13,6 +14,25 @@ const LATENCY = 150;
 const withLatency = <T,>(result: T) =>
   new Promise<T>((res) => setTimeout(() => res(result), LATENCY));
 
+export interface FlightCreateParams {
+  // Minimal required creation parameters: caller must provide these four.
+  departureAirport: string;
+  destinationAirport: string;
+  departureTime: Date;
+  arrivalTime: Date;
+  distanceKm: number;
+  durationMinutes: number;
+}
+
+// Format a Date (UTC) to YYDDHHmm as requested (two-digit year, day, hour, minute)
+function formatYYYYDDHHmm(d: Date): string {
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  const yyyy = d.getUTCFullYear().toString();
+  const dd = pad(d.getUTCDate());
+  const hh = pad(d.getUTCHours());
+  const mm = pad(d.getUTCMinutes());
+  return `${yyyy}${dd}${hh}${mm}`;
+}
 
 export const flightService = {
   async getAll(): Promise<Flight[]> {
@@ -23,22 +43,50 @@ export const flightService = {
     return withLatency(_flights.find((p) => p.code === code) ?? null);
   },
 
-  async create(data: Omit<Flight, 'code'>): Promise<Flight> {
-    const p: Flight = { ...data, code: '' };
-    _flights = [p, ..._flights];
-    return withLatency(p);
+  async create(payload: FlightCreateParams): Promise<Flight> {
+    const now = new Date();
+    const code = generateGuid();
+    const departure = payload.departureTime;
+    const arrival = payload.arrivalTime;
+    const name = payload.departureAirport + formatYYYYDDHHmm(departure) + payload.destinationAirport;
+    const newFlight: Flight = {
+      code,
+      name,
+      origin: payload.departureAirport,
+      destination: payload.destinationAirport,
+      departureTime: departure,
+      arrivalTime: arrival,
+      status: DEFAULT_FLIGHT_STATUS,
+      distanceKm: payload.distanceKm,
+      durationMinutes: payload.durationMinutes,
+      actualDepartureTime: null,
+      actualArrivalTime: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    // this.store is immutable, so we push to the internal array
+    // and return the new flight
+    _flights.push(newFlight);
+    return await this.getByCode(newFlight.code) as Flight;
   },
 
-  async update(code: string, patch: Partial<Omit<Flight, 'code'>>): Promise<Flight | null> {
-    let updated: Flight | null = null;
-    _flights = _flights.map((p) => {
-      if (p.code === code) {
-        updated = { ...p, ...patch };
-        return updated;
-      }
-      return p;
-    });
-    return withLatency(updated);
+  async update(code: string): Promise<Flight | null> {
+    const theItem = _flights.find(f => f.code === code);
+    if (!theItem) return withLatency(null);
+
+    const now = new Date();
+
+    if (theItem.status === 'scheduled' && theItem.departureTime < now) {
+      theItem.status = 'enroute';
+      theItem.updatedAt = now;
+    } 
+
+    if ((theItem.status === 'scheduled' || theItem.status === 'enroute') && theItem.arrivalTime < now) {
+      theItem.status = 'landed';
+      theItem.updatedAt = now;
+    } 
+    return withLatency(theItem);
   },
 
   async remove(code: string): Promise<boolean> {
@@ -48,10 +96,6 @@ export const flightService = {
     return withLatency(removed);
   },
 
-  async replaceAll(items: Flight[]): Promise<void> {
-    _flights = [...items];
-    return withLatency(undefined as unknown as void);
-  },
 } as const;
 
 
@@ -79,15 +123,15 @@ export function useFlights() {
 
   const getByCode = (code: string) => flightService.getByCode(code);
 
-  const create = async (data: Omit<Flight, 'code'>) => {
+  const create = async (data: FlightCreateParams) => {
     const p = await flightService.create(data);
     // refresh list from service to keep consistent
     setCurrent(await flightService.getAll());
     return p;
   };
 
-  const update = async (code: string, patch: Partial<Omit<Flight, 'code'>>) => {
-    const p = await flightService.update(code, patch);
+  const update = async (code: string) => {
+    const p = await flightService.update(code);
     setCurrent(await flightService.getAll());
     return p;
   };

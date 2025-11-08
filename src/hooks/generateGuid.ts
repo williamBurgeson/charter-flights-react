@@ -5,7 +5,7 @@
  * and finally to a Math.random-based fallback if necessary.
  */
 export function generateGuid(): string {
-  const gbl = globalThis as any;
+  const gbl = globalThis as { crypto?: Crypto };
 
   if (gbl.crypto?.randomUUID) {
     return gbl.crypto.randomUUID();

@@ -20,15 +20,10 @@ export interface Flight {
   status: FlightStatus;
 
   // Recommended / operational
-  aircraftType?: string;
-  aircraftRegistration?: string;
   distanceKm?: number;
   durationMinutes?: number; // planned airborne minutes
   actualDepartureTime?: Date | null;
   actualArrivalTime?: Date | null;
-  passengers?: number;
-  capacity?: number;
-  operator?: string; // carrier/operator code or name
 
   // Audit
   createdAt?: Date;
