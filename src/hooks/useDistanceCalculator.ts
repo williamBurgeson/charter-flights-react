@@ -1,21 +1,12 @@
 import { useCallback } from "react";
 import { useAirports } from "./data/useAirports";
 import { useTerritories } from "./data/useTerritories";
+import type { Airport } from "../models/airport.model";
+import type { ContinentCode } from "../models/continent.model";
 
 // --- Types ---
 export type DistanceUnit = "km" | "miles" | "nautical-miles";
 export type MatchReason = "within-radius" | "nearest-N" | "continent-match";
-
-export interface Airport {
-  code: string;
-  name: string;
-  lat_decimal: number;
-  lon_decimal: number;
-  country: string;
-  continent?: string;
-}
-
-export type ContinentCode = string;
 
 export interface AirportDistanceSearchOptions {
   centerLat: number;
@@ -87,14 +78,14 @@ function determineMatchReason(
 ): MatchReason {
   if (airportCodes?.includes(airport.code)) return "nearest-N";
   if (countryCodes?.includes(airport.country)) return "nearest-N";
-  if (continentCodes?.includes(airport.continent || "")) return "continent-match";
+  if (airport.continent && continentCodes?.includes(airport.continent as ContinentCode)) return "continent-match";
   return "nearest-N";
 }
 
 // --- Main hook ---
 export function useDistanceCalculator() {
-  // ✅ Bring in your data access hooks
-  const airportsService = useAirports();
+  //  Bring in your data access hooks
+  const { filterByCountryValues: filterAirportsByCountryValues, filterByCodeValues: filterAirportsByCodeValues, getAll: getAllAirports } = useAirports();
   const territoriesService = useTerritories();
 
   // Internal helper that depends on those hooks
@@ -121,10 +112,10 @@ export function useDistanceCalculator() {
     // Retrieve airports
     const [airportsFromCountries, airportsFromCodes] = await Promise.all([
       combinedCountries.length
-        ? airportsService.filterByCountryValues(combinedCountries.map(c => c.code))
+        ? filterAirportsByCountryValues(combinedCountries.map(c => c.code))
         : [],
       airportCodes?.length
-        ? airportsService.filterByCodeValues(airportCodes)
+        ? filterAirportsByCodeValues(airportCodes)
         : []
     ]);
 
@@ -134,7 +125,7 @@ export function useDistanceCalculator() {
     ];
 
     return combinedAirports;
-  }, [airportsService, territoriesService]);
+  }, [filterAirportsByCountryValues, filterAirportsByCodeValues, territoriesService]);
 
   // Public method: find airports near a given location
   const findNearbyAirports = useCallback(async (
@@ -150,10 +141,16 @@ export function useDistanceCalculator() {
 
     validateCoordinates(centerLat, centerLon);
 
-    const candidateAirports =
-      !airportCodes?.length && !countryCodes?.length && !continentCodes?.length
-        ? await airportsService.getAll()
-        : await getFilteredAirports(airportCodes, countryCodes, continentCodes);
+    // helper to load candidate airports; keeps branching logic local so
+    // `candidateAirports` can be a const and the control flow is easier to read
+    const loadCandidateAirports = async (): Promise<Airport[]> => {
+      if (!airportCodes?.length && !countryCodes?.length && !continentCodes?.length) {
+        return await getAllAirports();
+      }
+      return await getFilteredAirports(airportCodes, countryCodes, continentCodes);
+    }
+
+    const candidateAirports = await loadCandidateAirports();
 
     const results = candidateAirports.map(a => {
       const distKm = calculateDistance(
@@ -180,7 +177,7 @@ export function useDistanceCalculator() {
     filtered.sort((a, b) => a.distance - b.distance);
     return maxResults ? filtered.slice(0, maxResults) : filtered;
 
-  }, [airportsService, getFilteredAirports]);
+  }, [getAllAirports, getFilteredAirports]);
 
   // Public API
   return { calculateDistance, findNearbyAirports };

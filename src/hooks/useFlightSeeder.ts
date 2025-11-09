@@ -7,6 +7,8 @@ import type { Territory } from '../models/territory.model'
 import { addDays, addMinutes, getTicks } from '../utils/date-utils'
 import type { ContinentCode } from '../models/continent.model'
 import type { Flight } from '../models/flight.model'
+import { useDistanceCalculator } from './useDistanceCalculator'
+import useFlightTimeCalculator from './useFlightTimeCalculator'
 
 interface FlightSeedInfo {
   fromContinent: ContinentCode
@@ -39,6 +41,8 @@ export function useFlightSeeder() {
   const { getAll: getAllAirports } = useAirports()
   const { getAll: getAllTerritories } = useTerritories()
   const { create: createFlight } = useFlights()
+  const { calculateDistance : calculateFlightDistance } = useDistanceCalculator()
+  const { calculateFlightTimeMinutes } = useFlightTimeCalculator()
 
   // Entity arrays aliased to the domain name. Use state so callers can treat
   // them as stable `const` snapshots. We'll keep them in sync with the
@@ -65,20 +69,25 @@ export function useFlightSeeder() {
   const seededRef = useRef(false)
 
   const triggerSeed = useCallback(
-    async (createFn?: (params: FlightCreateParams) => Promise<unknown>) => {
+    async (params: FlightCreateParams) => {
       if (seededRef.current) return
-      seededRef.current = true
+      
 
       // Ensure underlying data is loaded via the loader helpers and
       // snapshot it into local state so callers can use the `airportData`
-      // / `territoryData` consts.
-      const airports = await loadAirports()
-      const territories = await loadTerritories()
+      const airportDataTemp = await loadAirports()
+      const territoryDataTemp = await loadTerritories()
+      setAirportData(airportDataTemp)
+      setTerritoryData(territoryDataTemp)
 
-      const create = createFn ?? createFlight
+      // const create = createFn ?? createFlight
 
       // minimal guard
-      if (!create || airports.length === 0 || territories.length === 0) return
+      if (airportData.length === 0 || territoryData.length === 0) {
+        return;
+      } 
+
+      seededRef.current = true
 
       const today = new Date(new Date().toDateString())
       const fortyFiveDaysAgo = addDays(today, -45)
@@ -105,9 +114,9 @@ export function useFlightSeeder() {
         return timeSlots
       }
 
-      const getAirportsByTerritory = (countryCode: string) => airports.filter((a) => a.country === countryCode)
+      const getAirportsByTerritory = (countryCode: string) => airportData.filter((a) => a.country === countryCode)
       const getTerritoriesByContinent = (continentCode: ContinentCode) =>
-        territories.filter((t) => t.continents?.includes(continentCode))
+        territoryData.filter((t) => t.continents?.includes(continentCode))
 
       const getAirportsFromCountries = (fromCountryCode: string, toCountryCode: string) => {
         const fromAirportsList = getAirportsByTerritory(fromCountryCode)
@@ -154,7 +163,7 @@ export function useFlightSeeder() {
             ? allTerritoriesInFromContinent
             : toContinentCode
             ? getTerritoriesByContinent(toContinentCode)
-            : territories
+            : territoryData
 
         return getUsableTerritories(allTerritoriesInFromContinent, allTerritoriesInToContinent)
       }
@@ -176,10 +185,10 @@ export function useFlightSeeder() {
             const { fromAirport, toAirport } = getAirportsFromContinents(cfg.fromContinent, cfg.toContinent)
 
             // awaiting implementation of distance calculation
-            const durationMinutes = 60 // simple default
-            const distanceKm = 1000
+            const distanceKm = calculateFlightDistance(fromAirport, toAirport)
+            const durationMinutes = calculateFlightTimeMinutes(distanceKm)
 
-            const created = await create({
+            const createdFlight = await createFlight({
               departureAirport: fromAirport.code,
               destinationAirport: toAirport.code,
               departureTime: flightTime,
@@ -187,7 +196,7 @@ export function useFlightSeeder() {
               distanceKm,
               durationMinutes,
             })
-            if (created) flightsForDate.push(created as Flight)
+            if (createdFlight) flightsForDate.push(createdFlight)
           }
         }
 
@@ -207,7 +216,7 @@ export function useFlightSeeder() {
 
       return await createFlightsForDateRange(fortyFiveDaysAgo, addDays(today, 45))
     },
-    [loadAirports, loadTerritories, createFlight],
+    [airportData, territoryData],
   )
 
   return {

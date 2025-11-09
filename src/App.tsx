@@ -5,11 +5,13 @@ import './App.css'
 import { useContinents } from './hooks/data/useContinents'
 import useFlightSeeder from './hooks/useFlightSeeder'
 import type { Continent } from './models/continent.model'
+import { useFlights } from './hooks/data/useFlights'
 
 function App() {
   const [count, setCount] = useState(0)
 
   const { getAll: getAllContinents, loading, error } = useContinents();
+  const { getAll: getAllFlights } = useFlights();
 
   const [continents, setContinents] = useState<Continent[] | null>(null);
 
@@ -21,8 +23,15 @@ function App() {
   useEffect(() => {
     // fire once on mount; triggerSeed is a minimal skeleton you can extend
     // we call triggerSeed without passing a create function per your request
-    triggerSeed().catch((err) => console.error('seed failed', err))
-  }, [triggerSeed])
+    triggerSeed()
+      .then(() => {
+        getAllFlights().then((flights) => {
+          console.log(`Seed complete, ${flights.length} flights loaded:`, flights);
+        })
+      })
+      .catch((err) => console.error('seed failed', err))
+  }, [triggerSeed]);
+
   useEffect(() => {
     async function fetchContinents() {
       try {

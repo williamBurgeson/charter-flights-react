@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useFetchData } from "./useFetchData";
 import type { RecordEntity } from "../../models/record-entity";
 
@@ -42,7 +42,30 @@ export function makeGenericAccessorHook<
     NonUniqueValueFilters<T, NKeys>;
 
   return function useAccessor(): Generated {
-    const { data, loading, error } = useFetchData<T>(url);
+    // The fetcher is now a single async method. The hook owns local state
+    // for `data`/`loading`/`error` and uses the fetcher to populate it.
+    const { fetchData } = useFetchData();
+    const [data, setData] = useState<T[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
+
+    useEffect(() => {
+      let mounted = true;
+      setLoading(true);
+      fetchData<T>(url)
+        .then((list) => {
+          if (mounted) setData(list);
+        })
+        .catch((err) => {
+          if (mounted) setError(err as Error);
+        })
+        .finally(() => {
+          if (mounted) setLoading(false);
+        });
+      return () => {
+        mounted = false;
+      };
+    }, [fetcher]);
 
     const uniqueKeys = useMemo(
       () => (metadata?.uniqueKeys ?? []) as (keyof T)[],
