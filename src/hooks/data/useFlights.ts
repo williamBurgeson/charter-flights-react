@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { DEFAULT_FLIGHT_STATUS, type Flight } from '../../models/flight.model';
-import { generateGuid } from '../generateGuid';
+import { generateGuid } from '../../utils/generateGuid';
 
 // optional artificial latency (ms)
 const LATENCY = 150;
