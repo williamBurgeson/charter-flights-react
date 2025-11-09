@@ -34,35 +34,33 @@ const FLIGHT_SEED_CONFIG: FlightSeedInfo[] = [
  * component lifetime. The trigger awaits the accessor `getAll()` helpers so
  * callers don't need to worry about loading state.
  */
-export function useSeedHelper() {
+export function useFlightSeeder() {
   // Accessor hooks (async accessor methods + cached data)
-  const airportAccessor = useAirports()
-  const territoryAccessor = useTerritories()
-  const flightAccessor = useFlights()
+  const { getAll: getAllAirports } = useAirports()
+  const { getAll: getAllTerritories } = useTerritories()
+  const { create: createFlight } = useFlights()
 
   // Entity arrays aliased to the domain name. Use state so callers can treat
   // them as stable `const` snapshots. We'll keep them in sync with the
   // accessor's data and update them when the seeder explicitly loads data.
-  const [airportData, setAirportData] = useState<Airport[]>(([]) as Airport[])
-  const [territoryData, setTerritoryData] = useState<Territory[]>(([]))
+  const [airportData, setAirportData] = useState<Airport[]>([])
+  const [territoryData, setTerritoryData] = useState<Territory[]>([])
 
   // Load helpers: explicitly load and snapshot data. These replace exposing
   // the accessor.getAll methods directly to avoid duplication between the
   // exported array (`airportData`) and a getAll function that returns the same
   // data.
   const loadAirports = useCallback(async () => {
-    const a = await airportAccessor.getAll()
+    const a = await getAllAirports()
     setAirportData(a)
     return a
-  }, [airportAccessor])
+  }, [airportData, getAllAirports])
 
   const loadTerritories = useCallback(async () => {
-    const t = await territoryAccessor.getAll()
+    const t = await getAllTerritories()
     setTerritoryData(t)
     return t
-  }, [territoryAccessor])
-
-  const createFlight = flightAccessor.create
+  }, [territoryData, getAllTerritories])
 
   const seededRef = useRef(false)
 
@@ -177,6 +175,7 @@ export function useSeedHelper() {
             const flightTime = timeSlots[slotIndex++] || addMinutes(flightDate, i * 10)
             const { fromAirport, toAirport } = getAirportsFromContinents(cfg.fromContinent, cfg.toContinent)
 
+            // awaiting implementation of distance calculation
             const durationMinutes = 60 // simple default
             const distanceKm = 1000
 
@@ -212,18 +211,8 @@ export function useSeedHelper() {
   )
 
   return {
-    // legacy keys kept for compatibility
-    airports: airportData,
-    territories: territoryData,
-    // preferred aliases
-    airportData,
-    territoryData,
-    loadAirports,
-    loadTerritories,
-    createFlight,
     triggerSeed,
-    loading: airportAccessor.loading || territoryAccessor.loading,
   } as const
 }
 
-export default useSeedHelper
+export default useFlightSeeder

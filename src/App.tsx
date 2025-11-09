@@ -3,7 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import { useContinents } from './hooks/data/useContinents'
-import useSeedHelper from './app/temp/useSeedHelper'
+import useFlightSeeder from './app/temp/useFlightSeeder'
 import type { Continent } from './models/continent.model'
 
 function App() {
@@ -16,7 +16,7 @@ function App() {
   const loadingFragment = loading ? <p>Loading...</p> : null;
   const errorFragment = error ? <p>Error: {String(error)}</p> : null;
 
-  const { triggerSeed } = useSeedHelper()
+  const { triggerSeed } = useFlightSeeder()
 
   useEffect(() => {
     // fire once on mount; triggerSeed is a minimal skeleton you can extend
