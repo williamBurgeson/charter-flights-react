@@ -1,12 +1,12 @@
 import { useCallback, useRef, useState } from 'react'
-import { useAirports } from '../../hooks/data/useAirports'
-import { useTerritories } from '../../hooks/data/useTerritories'
-import { useFlights, type FlightCreateParams } from '../../hooks/data/useFlights'
-import type { Airport } from '../../models/airport.model'
-import type { Territory } from '../../models/territory.model'
-import { addDays, addMinutes, getTicks } from '../../utils/date-utils'
-import type { ContinentCode } from '../../models/continent.model'
-import type { Flight } from '../../models/flight.model'
+import { useAirports } from './data/useAirports'
+import { useTerritories } from './data/useTerritories'
+import { useFlights, type FlightCreateParams } from './data/useFlights'
+import type { Airport } from '../models/airport.model'
+import type { Territory } from '../models/territory.model'
+import { addDays, addMinutes, getTicks } from '../utils/date-utils'
+import type { ContinentCode } from '../models/continent.model'
+import type { Flight } from '../models/flight.model'
 
 interface FlightSeedInfo {
   fromContinent: ContinentCode

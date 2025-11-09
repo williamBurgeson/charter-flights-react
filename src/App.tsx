@@ -3,7 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import { useContinents } from './hooks/data/useContinents'
-import useFlightSeeder from './app/temp/useFlightSeeder'
+import useFlightSeeder from './hooks/useFlightSeeder'
 import type { Continent } from './models/continent.model'
 
 function App() {
