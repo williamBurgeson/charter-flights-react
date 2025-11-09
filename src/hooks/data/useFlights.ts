@@ -1,18 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { DEFAULT_FLIGHT_STATUS, type Flight } from '../../models/flight.model';
 import { generateGuid } from '../generateGuid';
 
-// Fake HTTP-style in-memory service: async methods (Promise) that mimic
-// remote calls. No subscribers — callers fetch/await results. This mirrors
-// how a real HTTP client behaves and keeps the API simple.
-
-// internal list
-let _flights: Flight[] = [];
-
 // optional artificial latency (ms)
 const LATENCY = 150;
-const withLatency = <T,>(result: T) =>
-  new Promise<T>((res) => setTimeout(() => res(result), LATENCY));
+const withLatency = <T,>(result: T) => new Promise<T>((res) => setTimeout(() => res(result), LATENCY));
 
 export interface FlightCreateParams {
   // Minimal required creation parameters: caller must provide these four.
@@ -34,16 +26,28 @@ function formatYYYYDDHHmm(d: Date): string {
   return `${yyyy}${dd}${hh}${mm}`;
 }
 
-export const flightService = {
-  async getAll(): Promise<Flight[]> {
-    return withLatency([..._flights]);
-  },
+// The hook will own the flights state (single source-of-truth per-hook).
+// This keeps the logic local and testable while still simulating an async
+// fake HTTP API via `withLatency`.
 
-  async getByCode(code: Flight['code']): Promise<Flight | null> {
-    return withLatency(_flights.find((p) => p.code === code) ?? null);
-  },
 
-  async create(payload: FlightCreateParams): Promise<Flight> {
+// Hook: fetches initial data on mount and exposes async CRUD methods that
+// update local state after the operation completes. This is a simple fake-HTTP
+// client pattern — consumers await methods and the hook keeps UI state in sync.
+export function useFlights() {
+  const [flights, setFlights] = useState<Flight[]>([]);
+
+  const getAll = async () => {
+    // return a copy to mimic an immutable response
+    return withLatency([...flights]);
+  };
+
+  const getByCode = async (code: string) => {
+    const found = flights.find((p) => p.code === code) ?? null;
+    return withLatency(found);
+  };
+
+  const create = async (payload: FlightCreateParams) => {
     const now = new Date();
     const code = generateGuid();
     const departure = payload.departureTime;
@@ -65,85 +69,46 @@ export const flightService = {
       updatedAt: now,
     };
 
-    // this.store is immutable, so we push to the internal array
-    // and return the new flight
-    _flights.push(newFlight);
-    return await this.getByCode(newFlight.code) as Flight;
-  },
-
-  async update(code: string): Promise<Flight | null> {
-    const theItem = _flights.find(f => f.code === code);
-    if (!theItem) return withLatency(null);
-
-    const now = new Date();
-
-    if (theItem.status === 'scheduled' && theItem.departureTime < now) {
-      theItem.status = 'enroute';
-      theItem.updatedAt = now;
-    } 
-
-    if ((theItem.status === 'scheduled' || theItem.status === 'enroute') && theItem.arrivalTime < now) {
-      theItem.status = 'landed';
-      theItem.updatedAt = now;
-    } 
-    return withLatency(theItem);
-  },
-
-  async remove(code: string): Promise<boolean> {
-    const before = _flights.length;
-    _flights = _flights.filter((p) => p.code !== code);
-    const removed = _flights.length !== before;
-    return withLatency(removed);
-  },
-
-} as const;
-
-
-// Hook: fetches initial data on mount and exposes async CRUD methods that
-// update local state after the operation completes. This is a simple fake-HTTP
-// client pattern — consumers await methods and the hook keeps UI state in sync.
-export function useFlights() {
-  const [current, setCurrent] = useState<Flight[]>([]);
-
-  useEffect(() => {
-    let mounted = true;
-    flightService.getAll().then((list) => {
-      if (mounted) setCurrent(list);
-    });
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const getAll = async () => {
-    const list = await flightService.getAll();
-    setCurrent(list);
-    return list;
-  };
-
-  const getByCode = (code: string) => flightService.getByCode(code);
-
-  const create = async (data: FlightCreateParams) => {
-    const p = await flightService.create(data);
-    // refresh list from service to keep consistent
-    setCurrent(await flightService.getAll());
-    return p;
+    setFlights((prev) => [...prev, newFlight]);
+    await withLatency(null);
+    return newFlight;
   };
 
   const update = async (code: string) => {
-    const p = await flightService.update(code);
-    setCurrent(await flightService.getAll());
-    return p;
+    let updated: Flight | null = null;
+    setFlights((prev) => {
+      const next = prev.map((f) => {
+        if (f.code !== code) return f;
+        const now = new Date();
+        const copy = { ...f };
+        if (copy.status === 'scheduled' && copy.departureTime < now) {
+          copy.status = 'enroute';
+          copy.updatedAt = now;
+        }
+        if ((copy.status === 'scheduled' || copy.status === 'enroute') && copy.arrivalTime < now) {
+          copy.status = 'landed';
+          copy.updatedAt = now;
+        }
+        updated = copy;
+        return copy;
+      });
+      return next;
+    });
+    return withLatency(updated);
   };
 
   const remove = async (code: string) => {
-    const ok = await flightService.remove(code);
-    setCurrent(await flightService.getAll());
-    return ok;
+    let removed = false;
+    setFlights((prev) => {
+      const next = prev.filter((p) => p.code !== code);
+      removed = next.length !== prev.length;
+      return next;
+    });
+    return withLatency(removed);
   };
 
   return {
-    flights: current,
+    // flights: flights,
     getAll,
     getByCode,
     create,
