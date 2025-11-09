@@ -1,19 +1,39 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import { useContinents } from './hooks/data/useContinents'
+import useSeedHelper from './app/temp/useSeedHelper'
+import type { Continent } from './models/continent.model'
 
 function App() {
   const [count, setCount] = useState(0)
 
   const { getAll: getAllContinents, loading, error } = useContinents();
 
-  const continents = getAllContinents();
-  console.log(continents, loading, error);
-  
-  const loadingFragment = loading ? <div>Loading...</div> : '';
-  const errorFragment = error ? <div>Error: {error.message}</div> : '';
+  const [continents, setContinents] = useState<Continent[] | null>(null);
+
+  const loadingFragment = loading ? <p>Loading...</p> : null;
+  const errorFragment = error ? <p>Error: {String(error)}</p> : null;
+
+  const { triggerSeed } = useSeedHelper()
+
+  useEffect(() => {
+    // fire once on mount; triggerSeed is a minimal skeleton you can extend
+    // we call triggerSeed without passing a create function per your request
+    triggerSeed().catch((err) => console.error('seed failed', err))
+  }, [triggerSeed])
+  useEffect(() => {
+    async function fetchContinents() {
+      try {
+        const data = await getAllContinents();
+        setContinents(data);
+      } catch (error) {
+        console.error('Failed to fetch continents:', error);
+      }
+    }
+    fetchContinents();
+  }, [getAllContinents]);
 
   // useEffect(() => {
   //   async function fetchContinents() {
