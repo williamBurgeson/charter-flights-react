@@ -1,41 +1,21 @@
 // useFetchData.ts
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 
 /**
- * Minimal fetch hook that exposes just a single async loader method.
- * Callers should manage storage if they need to keep the data.
+ * Minimal fetch hook that returns a stable fetcher function.
+ * The hook itself has no internal state and does not auto-load.
  *
  * Usage:
- * const fetchData = useFetchData<T>(url)
- * const items = await fetchData()
+ * const fetcher = useFetchData();
+ * const items = await fetcher<MyType>("/path/to.json");
  */
-export function useFetchData<T>(url: string) {
+export function useFetchData() {
+  const fetchData = useCallback(async <T,>(url: string) => {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    const json = (await res.json()) as T[];
+    return json;
+  }, []);
 
-  const [data, setData] = useState<T[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-    fetch(url)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        return res.json() as Promise<T[]>;
-      })
-      .then((json) => {
-        if (mounted) setData(json);
-      })
-      .catch((err) => {
-        if (mounted) setError(err as Error);
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, [url]);
-
-  return { data, loading, error };
+  return fetchData;
 }
