@@ -42,30 +42,12 @@ export function makeGenericAccessorHook<
     NonUniqueValueFilters<T, NKeys>;
 
   return function useAccessor(): Generated {
-    // The fetcher is now a single async method. The hook owns local state
-    // for `data`/`loading`/`error` and uses the fetcher to populate it.
-    // const fetcher = useFetchData<T>();
+    // use the param-less fetcher hook to get a stable fetch function
+    const fetchData = useFetchData();
+
     const [data, setData] = useState<T[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
-
-    // useEffect(() => {
-    //   let mounted = true;
-    //   setLoading(true);
-    //   fetcher(url)
-    //     .then((list) => {
-    //       if (mounted) setData(list);
-    //     })
-    //     .catch((err) => {
-    //       if (mounted) setError(err as Error);
-    //     })
-    //     .finally(() => {
-    //       if (mounted) setLoading(false);
-    //     });
-    //   return () => {
-    //     mounted = false;
-    //   };
-    // }, [fetcher]);
 
     const uniqueKeys = useMemo(
       () => (metadata?.uniqueKeys ?? []) as (keyof T)[],
@@ -76,23 +58,18 @@ export function makeGenericAccessorHook<
       []
     );
 
-    // Memoise accessors so they're rebuilt only when `data` changes
+    // Memoise accessors so they're rebuilt when `data`, keys or url change
     const accessors = useMemo(() => {
       const getAll = async () => {
-        const { data, loading, error } = await useFetchData<T>(url);
-
+        setLoading(true);
+        setError(null);
         try {
-
-          setLoading(true);
-          setError(null); 
-          const res = await fetch(url);
-          if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-          const json = (await res.json()) as T[];
-          setData(json);
-          return json;
+          const jsonData = await fetchData<T>(url);
+          setData(jsonData);
+          return jsonData;
         } catch (err) {
           setError(err as Error);
-          return [];
+          return [] as T[];
         } finally {
           setLoading(false);
         }
@@ -134,7 +111,7 @@ export function makeGenericAccessorHook<
         ...((uniqueValueGetters as unknown) as UniqueValueGetters<T, UKeys>),
         ...((nonUniqueFilters as unknown) as NonUniqueFilters<T, NKeys>),
       };
-    }, [uniqueKeys, nonUniqueKeys]); // dependencies
+  }, [data, uniqueKeys, nonUniqueKeys, fetchData]); // dependencies
 
     return { data, loading, error, ...accessors } as Generated;
   };

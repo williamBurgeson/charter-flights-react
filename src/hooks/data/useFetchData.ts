@@ -13,8 +13,8 @@ export function useFetchData() {
   const fetchData = useCallback(async <T,>(url: string) => {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    const json = (await res.json()) as T[];
-    return json;
+    const data = (await res.json()) as T[];
+    return data;
   }, []);
 
   return fetchData;
