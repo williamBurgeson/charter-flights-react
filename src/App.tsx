@@ -24,7 +24,8 @@ function App() {
     // fire once on mount; triggerSeed is a minimal skeleton you can extend
     // we call triggerSeed without passing a create function per your request
     triggerSeed()
-      .then(() => {
+      .then((flightsOutput) => {
+        console.log('Flights output:', flightsOutput);
         getAllFlights().then((flights) => {
           console.log(`Seed complete, ${flights.length} flights loaded:`, flights);
         })

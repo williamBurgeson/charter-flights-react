@@ -69,9 +69,14 @@ export function useFlights() {
       updatedAt: now,
     };
 
-    setFlights((prev) => [...prev, newFlight]);
-    await withLatency(null);
-    return newFlight;
+    setFlights((prev) => {
+      if (prev.length % 50 === 0) {
+        console.log(`Creating flight ${newFlight.code} (${prev.length} flights total)`);
+      }
+      // console.log('prev:', prev);
+      return [...prev, newFlight];
+    });
+    return withLatency(newFlight);
   };
 
   const update = async (code: string) => {

@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { useFetchData } from "./useFetchData";
 import type { RecordEntity } from "../../models/record-entity";
 
@@ -44,28 +44,28 @@ export function makeGenericAccessorHook<
   return function useAccessor(): Generated {
     // The fetcher is now a single async method. The hook owns local state
     // for `data`/`loading`/`error` and uses the fetcher to populate it.
-    const { fetchData } = useFetchData();
+    // const fetcher = useFetchData<T>();
     const [data, setData] = useState<T[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
-    useEffect(() => {
-      let mounted = true;
-      setLoading(true);
-      fetchData<T>(url)
-        .then((list) => {
-          if (mounted) setData(list);
-        })
-        .catch((err) => {
-          if (mounted) setError(err as Error);
-        })
-        .finally(() => {
-          if (mounted) setLoading(false);
-        });
-      return () => {
-        mounted = false;
-      };
-    }, [fetcher]);
+    // useEffect(() => {
+    //   let mounted = true;
+    //   setLoading(true);
+    //   fetcher(url)
+    //     .then((list) => {
+    //       if (mounted) setData(list);
+    //     })
+    //     .catch((err) => {
+    //       if (mounted) setError(err as Error);
+    //     })
+    //     .finally(() => {
+    //       if (mounted) setLoading(false);
+    //     });
+    //   return () => {
+    //     mounted = false;
+    //   };
+    // }, [fetcher]);
 
     const uniqueKeys = useMemo(
       () => (metadata?.uniqueKeys ?? []) as (keyof T)[],
@@ -78,7 +78,26 @@ export function makeGenericAccessorHook<
 
     // Memoise accessors so they're rebuilt only when `data` changes
     const accessors = useMemo(() => {
-      const getAll = async () => data;
+      const getAll = async () => {
+        const { data, loading, error } = await useFetchData<T>(url);
+
+        try {
+
+          setLoading(true);
+          setError(null); 
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          const json = (await res.json()) as T[];
+          setData(json);
+          return json;
+        } catch (err) {
+          setError(err as Error);
+          return [];
+        } finally {
+          setLoading(false);
+        }
+      };
+
       const filterByField = async <K extends keyof T>(key: K, values: T[K][]) =>
         data.filter((item) => values.includes(item[key]));
 
@@ -115,7 +134,7 @@ export function makeGenericAccessorHook<
         ...((uniqueValueGetters as unknown) as UniqueValueGetters<T, UKeys>),
         ...((nonUniqueFilters as unknown) as NonUniqueFilters<T, NKeys>),
       };
-    }, [data, uniqueKeys, nonUniqueKeys]); // dependencies
+    }, [uniqueKeys, nonUniqueKeys]); // dependencies
 
     return { data, loading, error, ...accessors } as Generated;
   };

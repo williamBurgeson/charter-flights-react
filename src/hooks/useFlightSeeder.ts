@@ -58,19 +58,21 @@ export function useFlightSeeder() {
     const a = await getAllAirports()
     setAirportData(a)
     return a
-  }, [airportData, getAllAirports])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const loadTerritories = useCallback(async () => {
     const t = await getAllTerritories()
     setTerritoryData(t)
     return t
-  }, [territoryData, getAllTerritories])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  const seededRef = useRef(false)
+  // const seededRef = useRef(false)
 
   const triggerSeed = useCallback(
-    async (params: FlightCreateParams) => {
-      if (seededRef.current) return
+    async () => {
+      // if (seededRef.current) return
       
 
       // Ensure underlying data is loaded via the loader helpers and
@@ -83,11 +85,11 @@ export function useFlightSeeder() {
       // const create = createFn ?? createFlight
 
       // minimal guard
-      if (airportData.length === 0 || territoryData.length === 0) {
-        return;
-      } 
+      // if (airportData.length === 0 || territoryData.length === 0) {
+      //   return;
+      // } 
 
-      seededRef.current = true
+      // seededRef.current = true
 
       const today = new Date(new Date().toDateString())
       const fortyFiveDaysAgo = addDays(today, -45)
@@ -216,7 +218,8 @@ export function useFlightSeeder() {
 
       return await createFlightsForDateRange(fortyFiveDaysAgo, addDays(today, 45))
     },
-    [airportData, territoryData],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
   )
 
   return {
