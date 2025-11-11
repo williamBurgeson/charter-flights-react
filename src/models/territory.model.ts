@@ -6,8 +6,9 @@
 import type { EntityWithCode } from './entity-with-code.model';
 import type { EntityWithName } from './entity-with-name.model';
 import type { ContinentCode } from './continent.model';
+import type { RecordEntity } from './record-entity';
 
-export interface Territory extends EntityWithCode, EntityWithName {
+export interface Territory extends RecordEntity, EntityWithCode, EntityWithName {
   continents?: ContinentCode[];
   parentTerritory?: string;
 }

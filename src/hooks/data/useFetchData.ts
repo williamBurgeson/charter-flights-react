@@ -1,33 +1,21 @@
 // useFetchData.ts
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 
-export function useFetchData<T>(url: string) {
-  const [data, setData] = useState<T[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+/**
+ * Minimal fetch hook that returns a stable fetcher function.
+ * The hook itself has no internal state and does not auto-load.
+ *
+ * Usage:
+ * const fetcher = useFetchData();
+ * const items = await fetcher<MyType>("/path/to.json");
+ */
+export function useFetchData() {
+  const fetchData = useCallback(async <T,>(url: string) => {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    const data = (await res.json()) as T[];
+    return data;
+  }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    fetch(url)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        return res.json();
-      })
-      .then((json: T[]) => {
-        if (!cancelled) setData(json);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [url]);
-
-  return { data, loading, error } as const;
+  return fetchData;
 }

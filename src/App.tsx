@@ -1,32 +1,49 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import { useContinents } from './hooks/data/useContinents'
+import useFlightSeeder from './hooks/useFlightSeeder'
+import type { Continent } from './models/continent.model'
+import { useFlights } from './hooks/data/useFlights'
 
 function App() {
   const [count, setCount] = useState(0)
 
-  const { getAll: getAllContinents, loading, error } = useContinents();
+  const { getAll: getAllContinents } = useContinents();
+  const { getAll: getAllFlights } = useFlights();
 
-  const continents = getAllContinents();
-  console.log(continents, loading, error);
-  
-  const loadingFragment = loading ? <div>Loading...</div> : '';
-  const errorFragment = error ? <div>Error: {error.message}</div> : '';
+  const [continents, setContinents] = useState<Continent[] | null>(null);
+  const [flightCount, setFlightCount] = useState(0);
 
-  // useEffect(() => {
-  //   async function fetchContinents() {
-  //     try {
-  //       const response = await fetch('/continents.json');
-  //       const data = await response.json();
-  //       console.log(data);
-  //     } catch (error) {
-  //       console.error('Failed to fetch continents:', error);
-  //     }
-  //   }
-  //   fetchContinents();
-  // }, []);
+
+  const { triggerSeed } = useFlightSeeder()
+
+  useEffect(() => {
+    // fire once on mount; triggerSeed is a minimal skeleton you can extend
+    // we call triggerSeed without passing a create function per your request
+    triggerSeed()
+      .then((flightsOutput) => {
+        console.log('Flights output:', flightsOutput);
+        getAllFlights().then((flights) => {
+          console.log(`Seed complete, ${flights.length} flights loaded:`, flights);
+          setFlightCount(flights.length);
+        })
+      })
+      .catch((err) => console.error('seed failed', err))
+  }, [triggerSeed, getAllFlights]);
+
+  useEffect(() => {
+    async function fetchContinents() {
+      try {
+        const data = await getAllContinents();
+        setContinents(data);
+      } catch (error) {
+        console.error('Failed to fetch continents:', error);
+      }
+    }
+    fetchContinents();
+  }, [getAllContinents]);
 
   return (
     <>
@@ -50,8 +67,7 @@ function App() {
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
-      {loadingFragment}
-      {errorFragment}
+      We have {flightCount} flights seeded. { flightCount > 0 && '🎉 🎉'} 
       {continents && (
         <ul>
           {continents.map((continent) => (
