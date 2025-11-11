@@ -3,6 +3,7 @@ import { useAirports } from "./data/useAirports";
 import { useTerritories } from "./data/useTerritories";
 import type { Airport } from "../models/airport.model";
 import type { ContinentCode } from "../models/continent.model";
+import type { GeoPoint } from "../models/geopoint.value";
 
 // --- Types ---
 export type DistanceUnit = "km" | "miles" | "nautical-miles";
@@ -35,6 +36,8 @@ function toRadians(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
 
+// Validates latitude and longitude values - allow longitudes from -200 to 200
+// to accommodate territories near the dateline
 function validateCoordinates(lat: number, lon: number): void {
   if (lat < -90 || lat > 90) throw new Error(`Invalid latitude: ${lat}`);
   if (lon < -200 || lon > 200) throw new Error(`Invalid longitude: ${lon}`);
@@ -56,12 +59,13 @@ function convertFromKilometers(distance: number, toUnit: DistanceUnit): number {
   }
 }
 
-function calculateDistance(a1: Airport, a2: Airport): number {
+// Haversine formula
+function calculateDistance(p1: GeoPoint, p2: GeoPoint): number {
   const R = 6371; // Earth's radius in km
-  const lat1 = toRadians(a1.lat_decimal);
-  const lat2 = toRadians(a2.lat_decimal);
-  const dLat = toRadians(a2.lat_decimal - a1.lat_decimal);
-  const dLon = toRadians(a2.lon_decimal - a1.lon_decimal);
+  const lat1 = toRadians(p1.lat_decimal);
+  const lat2 = toRadians(p2.lat_decimal);
+  const dLat = toRadians(p2.lat_decimal - p1.lat_decimal);
+  const dLon = toRadians(p2.lon_decimal - p1.lon_decimal);
 
   const h = Math.sin(dLat / 2) ** 2 +
             Math.cos(lat1) * Math.cos(lat2) *
@@ -86,7 +90,8 @@ function determineMatchReason(
 export function useDistanceCalculator() {
   //  Bring in your data access hooks
   const { filterByCountryValues: filterAirportsByCountryValues, filterByCodeValues: filterAirportsByCodeValues, getAll: getAllAirports } = useAirports();
-  const territoriesService = useTerritories();
+  const { filterByContinentCodeValues : filterCountriesByContinentCodeValues, filterByCodeValues: filterCountriesByCodeValues } = useTerritories();
+  
 
   // Internal helper that depends on those hooks
   const getFilteredAirports = useCallback(async (
@@ -97,8 +102,8 @@ export function useDistanceCalculator() {
 
     // Resolve countries
     const [countriesFromContinents, countriesFromCodes] = await Promise.all([
-      continentCodes?.length ? territoriesService.filterByContinentCodeValues(continentCodes) : [],
-      countryCodes?.length ? territoriesService.filterByCodeValues(countryCodes) : []
+      continentCodes?.length ? filterCountriesByContinentCodeValues(continentCodes) : [],
+      countryCodes?.length ? filterCountriesByCodeValues(countryCodes) : []
     ]);
 
     const combinedCountries = [
@@ -125,7 +130,7 @@ export function useDistanceCalculator() {
     ];
 
     return combinedAirports;
-  }, [filterAirportsByCountryValues, filterAirportsByCodeValues, territoriesService]);
+  }, [filterAirportsByCountryValues, filterAirportsByCodeValues, filterCountriesByContinentCodeValues, filterCountriesByCodeValues]);
 
   // Public method: find airports near a given location
   const findNearbyAirports = useCallback(async (
@@ -152,16 +157,16 @@ export function useDistanceCalculator() {
 
     const candidateAirports = await loadCandidateAirports();
 
-    const results = candidateAirports.map(a => {
+    const results = candidateAirports.map(airport => {
       const distKm = calculateDistance(
-        { lat_decimal: centerLat, lon_decimal: centerLon } as Airport,
-        a
+        { lat_decimal: centerLat, lon_decimal: centerLon },
+        airport
       );
       return {
-        airport: a,
+        airport,
         distance: convertFromKilometers(distKm, units),
         units,
-        matchReason: determineMatchReason(a, airportCodes, countryCodes, continentCodes)
+        matchReason: determineMatchReason(airport, airportCodes, countryCodes, continentCodes)
       };
     });
 
