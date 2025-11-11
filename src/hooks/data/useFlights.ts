@@ -124,5 +124,5 @@ export function useFlights() {
     remove,
   }), [getAll, getByCode, create, update, remove]);
 
-  return api as const;
+  return api;
 }
