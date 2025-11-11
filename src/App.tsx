@@ -10,13 +10,12 @@ import { useFlights } from './hooks/data/useFlights'
 function App() {
   const [count, setCount] = useState(0)
 
-  const { getAll: getAllContinents, loading, error } = useContinents();
+  const { getAll: getAllContinents } = useContinents();
   const { getAll: getAllFlights } = useFlights();
 
   const [continents, setContinents] = useState<Continent[] | null>(null);
+  const [flightCount, setFlightCount] = useState(0);
 
-  const loadingFragment = loading ? <p>Loading...</p> : null;
-  const errorFragment = error ? <p>Error: {String(error)}</p> : null;
 
   const { triggerSeed } = useFlightSeeder()
 
@@ -28,10 +27,11 @@ function App() {
         console.log('Flights output:', flightsOutput);
         getAllFlights().then((flights) => {
           console.log(`Seed complete, ${flights.length} flights loaded:`, flights);
+          setFlightCount(flights.length);
         })
       })
       .catch((err) => console.error('seed failed', err))
-  }, [triggerSeed]);
+  }, [triggerSeed, getAllFlights]);
 
   useEffect(() => {
     async function fetchContinents() {
@@ -44,19 +44,6 @@ function App() {
     }
     fetchContinents();
   }, [getAllContinents]);
-
-  // useEffect(() => {
-  //   async function fetchContinents() {
-  //     try {
-  //       const response = await fetch('/continents.json');
-  //       const data = await response.json();
-  //       console.log(data);
-  //     } catch (error) {
-  //       console.error('Failed to fetch continents:', error);
-  //     }
-  //   }
-  //   fetchContinents();
-  // }, []);
 
   return (
     <>
@@ -80,8 +67,7 @@ function App() {
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
-      {loadingFragment}
-      {errorFragment}
+      We have {flightCount} flights seeded. { flightCount > 0 && '🎉 🎉'} 
       {continents && (
         <ul>
           {continents.map((continent) => (

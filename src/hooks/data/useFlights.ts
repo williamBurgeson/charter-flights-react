@@ -1,4 +1,3 @@
-import { useCallback, useMemo, useState } from 'react';
 import { DEFAULT_FLIGHT_STATUS, type Flight } from '../../models/flight.model';
 import { generateGuid } from '../../utils/generateGuid';
 
@@ -26,103 +25,94 @@ function formatYYYYDDHHmm(d: Date): string {
   return `${yyyy}${dd}${hh}${mm}`;
 }
 
-// The hook will own the flights state (single source-of-truth per-hook).
-// This keeps the logic local and testable while still simulating an async
-// fake HTTP API via `withLatency`.
+// Use a module-level (singleton) store so every caller of `useFlights()` sees
+// the same underlying flight list. This ensures that the seeder and any
+// tester/consumer are operating on the same instance.
 
+// Note that session storage might be a better choice for persistence across reloads,
+// but this is sufficient for in-memory testing. Also, session storage might not work well in all environments.
+let flightsStore: Flight[] = []
 
-// Hook: fetches initial data on mount and exposes async CRUD methods that
-// update local state after the operation completes. This is a simple fake-HTTP
-// client pattern — consumers await methods and the hook keeps UI state in sync.
+const getAll = async () => {
+  return withLatency([...flightsStore])
+}
+
+const getByCode = async (code: string) => {
+  const found = flightsStore.find((p) => p.code === code) ?? null
+  return withLatency(found)
+}
+
+const create = async (payload: FlightCreateParams, latencyMs?: number | null) => {
+  latencyMs = latencyMs ?? LATENCY
+  const withCustomLatency = <T,>(result: T) => new Promise<T>((res) => setTimeout(() => res(result), latencyMs!))
+
+  const now = new Date()
+  const code = generateGuid()
+  const departure = payload.departureTime
+  const arrival = payload.arrivalTime
+  const name = payload.departureAirport + formatYYYYDDHHmm(departure) + payload.destinationAirport
+  const newFlight: Flight = {
+    code,
+    name,
+    origin: payload.departureAirport,
+    destination: payload.destinationAirport,
+    departureTime: departure,
+    arrivalTime: arrival,
+    status: DEFAULT_FLIGHT_STATUS,
+    distanceKm: payload.distanceKm,
+    durationMinutes: payload.durationMinutes,
+    actualDepartureTime: null,
+    actualArrivalTime: null,
+    createdAt: now,
+    updatedAt: now,
+  }
+
+  flightsStore = [...flightsStore, newFlight]
+  return latencyMs ? withCustomLatency(newFlight) : newFlight
+}
+
+const update = async (code: string) => {
+  const now = new Date()
+  let updated: Flight | null = null
+
+  const next = flightsStore.map((f) => {
+    if (f.code !== code) return f
+    const copy = { ...f }
+    if (copy.status === 'scheduled' && copy.departureTime < now) {
+      copy.status = 'enroute'
+      copy.updatedAt = now
+    }
+    if ((copy.status === 'scheduled' || copy.status === 'enroute') && copy.arrivalTime < now) {
+      copy.status = 'landed'
+      copy.updatedAt = now
+    }
+    updated = copy
+    return copy
+  })
+
+  flightsStore = next
+  return withLatency(updated)
+}
+
+const remove = async (code: string) => {
+  const prev = flightsStore
+  const next = prev.filter((p) => p.code !== code)
+  const removed = next.length !== prev.length
+  flightsStore = next
+  return withLatency(removed)
+}
+
+// Dev helper: inspect the current in-memory store (not part of production API)
+export function __getFlightsStoreForDebug() {
+  return flightsStore
+}
+
 export function useFlights() {
-  const [flights, setFlights] = useState<Flight[]>([]);
-
-  const getAll = useCallback(async () => {
-    // return a copy to mimic an immutable response
-    return withLatency([...flights]);
-  }, [flights]);
-
-  const getByCode = useCallback(async (code: string) => {
-    const found = flights.find((p) => p.code === code) ?? null;
-    return withLatency(found);
-  }, [flights]);
-
-  const create = useCallback(async (payload: FlightCreateParams) => {
-    const now = new Date();
-    const code = generateGuid();
-    const departure = payload.departureTime;
-    const arrival = payload.arrivalTime;
-    const name = payload.departureAirport + formatYYYYDDHHmm(departure) + payload.destinationAirport;
-    const newFlight: Flight = {
-      code,
-      name,
-      origin: payload.departureAirport,
-      destination: payload.destinationAirport,
-      departureTime: departure,
-      arrivalTime: arrival,
-      status: DEFAULT_FLIGHT_STATUS,
-      distanceKm: payload.distanceKm,
-      durationMinutes: payload.durationMinutes,
-      actualDepartureTime: null,
-      actualArrivalTime: null,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    setFlights((prev) => {
-      if (prev.length % 50 === 0) {
-        console.log(`Creating flight ${newFlight.code} (${prev.length} flights total)`);
-      }
-      // console.log('prev:', prev);
-      return [...prev, newFlight];
-    });
-    return withLatency(newFlight);
-  }, []);
-
-  const update = useCallback(async (code: string) => {
-    const now = new Date();
-    let updated: Flight | null = null;
-
-    // Compute the next array from the current `flights` state synchronously,
-    // then set it. This avoids mutating an outer variable from inside the
-    // state updater callback and is easier to reason about.
-    const next = flights.map((f) => {
-      if (f.code !== code) return f;
-      const copy = { ...f };
-      if (copy.status === 'scheduled' && copy.departureTime < now) {
-        copy.status = 'enroute';
-        copy.updatedAt = now;
-      }
-      if ((copy.status === 'scheduled' || copy.status === 'enroute') && copy.arrivalTime < now) {
-        copy.status = 'landed';
-        copy.updatedAt = now;
-      }
-      updated = copy;
-      return copy;
-    });
-
-    setFlights(next);
-    return withLatency(updated);
-  }, [flights]);
-
-  const remove = useCallback(async (code: string) => {
-    let removed = false;
-    setFlights((prev) => {
-      const next = prev.filter((p) => p.code !== code);
-      removed = next.length !== prev.length;
-      return next;
-    });
-    return withLatency(removed);
-  }, []);
-
-  const api = useMemo(() => ({
-    // flights: flights,
+  return {
     getAll,
     getByCode,
     create,
     update,
     remove,
-  }), [getAll, getByCode, create, update, remove]);
-
-  return api;
+  }
 }

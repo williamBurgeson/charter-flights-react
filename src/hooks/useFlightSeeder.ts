@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import { useAirports } from './data/useAirports'
 import { useTerritories } from './data/useTerritories'
-import { useFlights, type FlightCreateParams } from './data/useFlights'
+import { useFlights } from './data/useFlights'
 import type { Airport } from '../models/airport.model'
 import type { Territory } from '../models/territory.model'
 import { addDays, addMinutes, getTicks } from '../utils/date-utils'
@@ -32,100 +32,83 @@ const FLIGHT_SEED_CONFIG: FlightSeedInfo[] = [
 ]
 
 /**
- * Hook: expose arrays for display and a `triggerSeed` that will run once per
- * component lifetime. The trigger awaits the accessor `getAll()` helpers so
- * callers don't need to worry about loading state.
+ * Seed flight data into the system on app start-up.
  */
 export function useFlightSeeder() {
-  // Accessor hooks (async accessor methods + cached data)
+  // Service hook accessors
   const { getAll: getAllAirports } = useAirports()
   const { getAll: getAllTerritories } = useTerritories()
   const { create: createFlight } = useFlights()
-  const { calculateDistance : calculateFlightDistance } = useDistanceCalculator()
+  const { calculateDistance: calculateFlightDistance } = useDistanceCalculator()
   const { calculateFlightTimeMinutes } = useFlightTimeCalculator()
 
-  // Entity arrays aliased to the domain name. Use state so callers can treat
-  // them as stable `const` snapshots. We'll keep them in sync with the
-  // accessor's data and update them when the seeder explicitly loads data.
   const [airportData, setAirportData] = useState<Airport[]>([])
   const [territoryData, setTerritoryData] = useState<Territory[]>([])
 
-  // Load helpers: explicitly load and snapshot data. These replace exposing
-  // the accessor.getAll methods directly to avoid duplication between the
-  // exported array (`airportData`) and a getAll function that returns the same
-  // data.
   const loadAirports = useCallback(async () => {
     const a = await getAllAirports()
     setAirportData(a)
     return a
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [getAllAirports])
 
   const loadTerritories = useCallback(async () => {
     const t = await getAllTerritories()
     setTerritoryData(t)
     return t
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [getAllTerritories])
 
-  // const seededRef = useRef(false)
+  const seededRef = useRef(false)
 
-  const triggerSeed = useCallback(
-    async () => {
-      // if (seededRef.current) return
-      
+  const triggerSeed = useCallback(async () => {
+    if (seededRef.current) return
+    seededRef.current = true
 
-      // Ensure underlying data is loaded via the loader helpers and
-      // snapshot it into local state so callers can use the `airportData`
-      const airportDataTemp = await loadAirports()
-      const territoryDataTemp = await loadTerritories()
-      setAirportData(airportDataTemp)
-      setTerritoryData(territoryDataTemp)
+    const airportDataTemp = await loadAirports()
+    const territoryDataTemp = await loadTerritories()
 
-      // const create = createFn ?? createFlight
+    // preserve original helper order, but return null on failures and log them
 
-      // minimal guard
-      // if (airportData.length === 0 || territoryData.length === 0) {
-      //   return;
-      // } 
+    const today = new Date(new Date().toDateString())
+    const oldestFlightsDate = addDays(today, -30)
+    const lastFlightsDate = addDays(today, 60)
 
-      // seededRef.current = true
+    const getFlightTimesForDate = (flightDate: Date) => {
+      const totalFlightsPerDay = FLIGHT_SEED_CONFIG.reduce((acc, cfg) => acc + cfg.flightsPerDay, 0)
+      const minutesInDay = 24 * 60
+      const timeSlots: Date[] = []
 
-      const today = new Date(new Date().toDateString())
-      const fortyFiveDaysAgo = addDays(today, -45)
-
-      const getFlightTimesForDate = (flightDate: Date) => {
-        const totalFlightsPerDay = FLIGHT_SEED_CONFIG.reduce((acc, cfg) => acc + cfg.flightsPerDay, 0)
-        const minutesInDay = 24 * 60
-        const timeSlots: Date[] = []
-
-        for (let i = 0; i < totalFlightsPerDay; i++) {
-          let slotTaken: boolean
-          let attempts = 0
-          do {
-            if (attempts >= totalFlightsPerDay) {
-              throw new Error('Could not find sufficient unique time slots for flight seeding')
-            }
-            attempts++
-            const minutesSeed = Math.floor(Math.random() * minutesInDay)
-            const proposedTime = addMinutes(flightDate, minutesSeed)
-            slotTaken = timeSlots.some((ts) => getTicks(ts) === getTicks(proposedTime))
-            if (!slotTaken) timeSlots.push(proposedTime)
-          } while (slotTaken)
-        }
-        return timeSlots
+      for (let i = 0; i < totalFlightsPerDay; i++) {
+        let slotTaken: boolean
+        let attempts = 0
+        do {
+          if (attempts >= totalFlightsPerDay) {
+            console.log(`Could not find sufficient unique time slots for ${flightDate.toDateString()}; continuing with what we have`)
+            break
+          }
+          attempts++
+          const minutesSeed = Math.floor(Math.random() * minutesInDay)
+          const proposedTime = addMinutes(flightDate, minutesSeed)
+          slotTaken = timeSlots.some((ts) => getTicks(ts) === getTicks(proposedTime))
+          if (!slotTaken) timeSlots.push(proposedTime)
+        } while (slotTaken)
       }
+      return timeSlots
+    }
 
-      const getAirportsByTerritory = (countryCode: string) => airportData.filter((a) => a.country === countryCode)
-      const getTerritoriesByContinent = (continentCode: ContinentCode) =>
-        territoryData.filter((t) => t.continents?.includes(continentCode))
+    const getAirportsByTerritory = (countryCode: string) =>
+      airportDataTemp.filter((a) => a.country === countryCode)
 
-      const getAirportsFromCountries = (fromCountryCode: string, toCountryCode: string) => {
+    const getTerritoriesByContinent = (continentCode: ContinentCode) =>
+      territoryDataTemp.filter((t) => t.continents?.includes(continentCode))
+
+    const getAirportsFromCountries = (fromCountryCode: string, toCountryCode: string) => {
+      try {
         const fromAirportsList = getAirportsByTerritory(fromCountryCode)
         const toAirportsList = fromCountryCode === toCountryCode ? fromAirportsList : getAirportsByTerritory(toCountryCode)
 
         if (fromAirportsList.length === 0 || toAirportsList.length === 0) {
-          throw new Error('No airports available for given countries')
+          console.log(`No airports available for countries ${fromCountryCode} -> ${toCountryCode}`)
+          return null
         }
 
         const maxAttempts = Math.max(10, fromAirportsList.length * 2)
@@ -135,11 +118,16 @@ export function useFlightSeeder() {
           if (fromAirport.code !== toAirport.code) return { fromAirport, toAirport }
         }
 
-        // fallback
-        return { fromAirport: fromAirportsList[0], toAirport: toAirportsList[0] }
+        console.log(`Unable to select different airports from territories ${fromCountryCode} and ${toCountryCode} after ${maxAttempts} attempts`)
+        return null
+      } catch (err) {
+        console.log('getAirportsFromCountries error', err)
+        return null
       }
+    }
 
-      const getUsableTerritories = (fromTerritories: Territory[], toTerritories: Territory[]) => {
+    const getUsableTerritories = (fromTerritories: Territory[], toTerritories: Territory[]) => {
+      try {
         const maxAttempts = Math.max(10, fromTerritories.length * 2)
         for (let attempts = 0; attempts < maxAttempts; attempts++) {
           const fromTerritory = fromTerritories[Math.floor(Math.random() * fromTerritories.length)]
@@ -154,42 +142,55 @@ export function useFlightSeeder() {
           if (fromAirportsList.length >= 2) return { fromTerritory, toTerritory }
         }
 
-        // fallback: return first pair
-        return { fromTerritory: fromTerritories[0], toTerritory: toTerritories[0] }
+        console.log('Unable to find usable territory pair after max attempts')
+        return null
+      } catch (err) {
+        console.log('getUsableTerritories error', err)
+        return null
       }
+    }
 
-      const getCountryCodesFromContinents = (fromContinentCode: ContinentCode, toContinentCode: ContinentCode | null) => {
-        const allTerritoriesInFromContinent = getTerritoriesByContinent(fromContinentCode)
-        const allTerritoriesInToContinent =
-          fromContinentCode === toContinentCode
-            ? allTerritoriesInFromContinent
-            : toContinentCode
-            ? getTerritoriesByContinent(toContinentCode)
-            : territoryData
+    const getCountryCodesFromContinents = (fromContinentCode: ContinentCode, toContinentCode: ContinentCode | null) => {
+      const allTerritoriesInFromContinent = getTerritoriesByContinent(fromContinentCode)
+      const allTerritoriesInToContinent =
+        fromContinentCode === toContinentCode
+          ? allTerritoriesInFromContinent
+          : toContinentCode
+          ? getTerritoriesByContinent(toContinentCode)
+          : territoryDataTemp
 
-        return getUsableTerritories(allTerritoriesInFromContinent, allTerritoriesInToContinent)
-      }
+      return getUsableTerritories(allTerritoriesInFromContinent, allTerritoriesInToContinent)
+    }
 
-      const getAirportsFromContinents = (fromContinentCode: ContinentCode, toContinentCode: ContinentCode | null) => {
-        const { fromTerritory, toTerritory } = getCountryCodesFromContinents(fromContinentCode, toContinentCode)
-        const { fromAirport, toAirport } = getAirportsFromCountries(fromTerritory.code, toTerritory.code)
-        return { fromAirport, toAirport }
-      }
+    const getAirportsFromContinents = (fromContinentCode: ContinentCode, toContinentCode: ContinentCode | null) => {
+      const pair = getCountryCodesFromContinents(fromContinentCode, toContinentCode)
+      if (!pair) return null
+      const { fromTerritory, toTerritory } = pair
+      const airports = getAirportsFromCountries(fromTerritory.code, toTerritory.code)
+      return airports
+    }
 
-      const createFlightsForDate = async (flightDate: Date) => {
-        const flightsForDate: Flight[] = []
-        const timeSlots = getFlightTimesForDate(flightDate)
-        let slotIndex = 0
+    const createFlightsForDate = async (flightDate: Date) => {
+      const flightsForDate: Flight[] = []
+      const timeSlots = getFlightTimesForDate(flightDate)
+      let slotIndex = 0
 
-        for (const cfg of FLIGHT_SEED_CONFIG) {
-          for (let i = 0; i < cfg.flightsPerDay; i++) {
-            const flightTime = timeSlots[slotIndex++] || addMinutes(flightDate, i * 10)
-            const { fromAirport, toAirport } = getAirportsFromContinents(cfg.fromContinent, cfg.toContinent)
+      for (const cfg of FLIGHT_SEED_CONFIG) {
+        for (let i = 0; i < cfg.flightsPerDay; i++) {
+          const flightTime = timeSlots[slotIndex++] || addMinutes(flightDate, i * 10)
+          const airports = getAirportsFromContinents(cfg.fromContinent, cfg.toContinent)
+          if (!airports) {
+            console.log(`Skipping flight: no airport pair available for ${JSON.stringify(cfg)} on ${flightDate.toDateString()}`)
+            continue
+          }
+          const { fromAirport, toAirport } = airports
 
-            // awaiting implementation of distance calculation
-            const distanceKm = calculateFlightDistance(fromAirport, toAirport)
-            const durationMinutes = calculateFlightTimeMinutes(distanceKm)
+          const distanceKm = calculateFlightDistance(fromAirport, toAirport)
+          const durationMinutes = calculateFlightTimeMinutes(distanceKm)
 
+          const latencyMs = 0 // zero latency for seeding
+
+          try {
             const createdFlight = await createFlight({
               departureAirport: fromAirport.code,
               destinationAirport: toAirport.code,
@@ -197,33 +198,41 @@ export function useFlightSeeder() {
               arrivalTime: addMinutes(flightTime, durationMinutes),
               distanceKm,
               durationMinutes,
-            })
+            }, latencyMs )
             if (createdFlight) flightsForDate.push(createdFlight)
+          } catch (err) {
+            console.log('createFlight failed for pair', fromAirport.code, toAirport.code, err)
+            // skip this one and continue
           }
         }
-
-        return flightsForDate
       }
 
-      const createFlightsForDateRange = async (startDate: Date, endDate: Date) => {
-        const allFlights: Flight[] = []
-        let currentDate = startDate
-        while (currentDate <= endDate) {
-          const flights = await createFlightsForDate(currentDate)
-          allFlights.push(...flights)
-          currentDate = addDays(currentDate, 1)
-        }
-        return allFlights
-      }
+      return flightsForDate
+    }
 
-      return await createFlightsForDateRange(fortyFiveDaysAgo, addDays(today, 45))
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  )
+    const createFlightsForDateRange = async (startDate: Date, endDate: Date) => {
+      const allFlights: Flight[] = []
+      let currentDate = startDate
+      while (currentDate <= endDate) {
+        const flights = await createFlightsForDate(currentDate)
+        allFlights.push(...flights)
+        currentDate = addDays(currentDate, 1)
+      }
+      return allFlights
+    }
+
+    const seeded = await createFlightsForDateRange(oldestFlightsDate, lastFlightsDate)
+
+    setAirportData(airportDataTemp)
+    setTerritoryData(territoryDataTemp)
+
+    return seeded
+  }, [loadAirports, loadTerritories, createFlight, calculateFlightDistance, calculateFlightTimeMinutes])
 
   return {
     triggerSeed,
+    airportData,
+    territoryData,
   } as const
 }
 
