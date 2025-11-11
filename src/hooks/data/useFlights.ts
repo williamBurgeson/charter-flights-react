@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { DEFAULT_FLIGHT_STATUS, type Flight } from '../../models/flight.model';
 import { generateGuid } from '../../utils/generateGuid';
 
@@ -16,7 +16,7 @@ export interface FlightCreateParams {
   durationMinutes: number;
 }
 
-// Format a Date (UTC) to YYDDHHmm as requested (two-digit year, day, hour, minute)
+// Format a Date (UTC) to YYYYDDHHmm as requested (four-digit year, day, hour, minute)
 function formatYYYYDDHHmm(d: Date): string {
   const pad = (n: number) => n.toString().padStart(2, '0');
   const yyyy = d.getUTCFullYear().toString();
@@ -37,17 +37,17 @@ function formatYYYYDDHHmm(d: Date): string {
 export function useFlights() {
   const [flights, setFlights] = useState<Flight[]>([]);
 
-  const getAll = async () => {
+  const getAll = useCallback(async () => {
     // return a copy to mimic an immutable response
     return withLatency([...flights]);
-  };
+  }, [flights]);
 
-  const getByCode = async (code: string) => {
+  const getByCode = useCallback(async (code: string) => {
     const found = flights.find((p) => p.code === code) ?? null;
     return withLatency(found);
-  };
+  }, [flights]);
 
-  const create = async (payload: FlightCreateParams) => {
+  const create = useCallback(async (payload: FlightCreateParams) => {
     const now = new Date();
     const code = generateGuid();
     const departure = payload.departureTime;
@@ -77,32 +77,35 @@ export function useFlights() {
       return [...prev, newFlight];
     });
     return withLatency(newFlight);
-  };
+  }, []);
 
-  const update = async (code: string) => {
+  const update = useCallback(async (code: string) => {
+    const now = new Date();
     let updated: Flight | null = null;
-    setFlights((prev) => {
-      const next = prev.map((f) => {
-        if (f.code !== code) return f;
-        const now = new Date();
-        const copy = { ...f };
-        if (copy.status === 'scheduled' && copy.departureTime < now) {
-          copy.status = 'enroute';
-          copy.updatedAt = now;
-        }
-        if ((copy.status === 'scheduled' || copy.status === 'enroute') && copy.arrivalTime < now) {
-          copy.status = 'landed';
-          copy.updatedAt = now;
-        }
-        updated = copy;
-        return copy;
-      });
-      return next;
-    });
-    return withLatency(updated);
-  };
 
-  const remove = async (code: string) => {
+    // Compute the next array from the current `flights` state synchronously,
+    // then set it. This avoids mutating an outer variable from inside the
+    // state updater callback and is easier to reason about.
+    const next = flights.map((f) => {
+      if (f.code !== code) return f;
+      const copy = { ...f };
+      if (copy.status === 'scheduled' && copy.departureTime < now) {
+        copy.status = 'enroute';
+        copy.updatedAt = now;
+      }
+      if ((copy.status === 'scheduled' || copy.status === 'enroute') && copy.arrivalTime < now) {
+        copy.status = 'landed';
+        copy.updatedAt = now;
+      }
+      updated = copy;
+      return copy;
+    });
+
+    setFlights(next);
+    return withLatency(updated);
+  }, [flights]);
+
+  const remove = useCallback(async (code: string) => {
     let removed = false;
     setFlights((prev) => {
       const next = prev.filter((p) => p.code !== code);
@@ -110,14 +113,16 @@ export function useFlights() {
       return next;
     });
     return withLatency(removed);
-  };
+  }, []);
 
-  return {
+  const api = useMemo(() => ({
     // flights: flights,
     getAll,
     getByCode,
     create,
     update,
     remove,
-  } as const;
+  }), [getAll, getByCode, create, update, remove]);
+
+  return api as const;
 }
