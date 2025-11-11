@@ -4,20 +4,18 @@ import { useTerritories } from "./data/useTerritories";
 import type { Airport } from "../models/airport.model";
 import type { ContinentCode } from "../models/continent.model";
 import type { GeoPoint } from "../models/geopoint.value";
+import type { AirportSearchParams } from "./useAirportSearch";
 
 // --- Types ---
 export type DistanceUnit = "km" | "miles" | "nautical-miles";
 export type MatchReason = "within-radius" | "nearest-N" | "continent-match";
 
-export interface AirportDistanceSearchOptions {
+export interface AirportDistanceSearchOptions extends AirportSearchParams {
   centerLat: number;
   centerLon: number;
   maxResults?: number;
   radius?: number;
   units?: DistanceUnit;
-  airportCodes?: string[];
-  countryCodes?: string[];
-  continentCodes?: ContinentCode[];
 }
 
 export interface AirportWithDistanceSearchInfo {

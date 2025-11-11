@@ -1,0 +1,39 @@
+import { useAirportSearch, type AirportSearchParams } from "./useAirportSearch";
+
+export interface FlightSearchParams {
+  airportFromSearchParams?: AirportSearchParams;
+  airportToSearchParams?: AirportSearchParams;
+  departureDateFrom?: Date;
+  departureDateTo?: Date;
+  arrivalDateFrom?: Date;
+  arrivalDateTo?: Date;
+  itemsFromBeginning?: number;
+  itemsFromEnd?: number;
+}
+
+export function useFlightSearch() {
+  const { searchAirports } = useAirportSearch();
+  const { getBy } = useFlights();
+
+  // This is a placeholder for the actual implementation of the flight search hook.
+  // You would typically include data access logic here.
+  const searchFlights = async (params: FlightSearchParams) => {
+    // Implementation to search flights based on params
+
+    const candidateAirportsFrom = await searchAirports(params.airportFromSearchParams || {});
+    const candidateAirportsTo = await searchAirports(params.airportToSearchParams || {});
+
+    const candidateAirportCodesFrom = candidateAirportsFrom.map(a => a.code);
+    const candidateAirportCodesTo = candidateAirportsTo.map(a => a.code);
+
+    let candidateFlights = []; // await getAllFlights();
+
+    return [];
+  };
+  return { searchFlights };
+} 
+
+function useFlights() {
+  throw new Error("Function not implemented.");
+}
+

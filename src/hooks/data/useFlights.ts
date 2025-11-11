@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { DEFAULT_FLIGHT_STATUS, type Flight } from '../../models/flight.model';
 import { generateGuid } from '../../utils/generateGuid';
 
@@ -40,6 +41,29 @@ const getAll = async () => {
 const getByCode = async (code: string) => {
   const found = flightsStore.find((p) => p.code === code) ?? null
   return withLatency(found)
+}
+
+const filterByAirportCodes = async (candidateAirportCodesFrom: string[], candidateAirportCodesTo: string[], exclusive: boolean) => {
+
+  if (exclusive) {
+    if (candidateAirportCodesFrom.length === 0 || candidateAirportCodesTo.length === 0) {
+      return withLatency([]);
+    }
+
+    const filtered = flightsStore.filter(
+      (f) => candidateAirportCodesFrom.includes(f.origin) && candidateAirportCodesTo.includes(f.destination)
+    );
+    return withLatency(filtered); 
+  }
+
+  if (candidateAirportCodesFrom.length === 0 || candidateAirportCodesTo.length === 0) { 
+    return withLatency([...flightsStore]);
+  }
+
+  const filtered = flightsStore.filter(
+    (f) => candidateAirportCodesFrom.includes(f.origin) || candidateAirportCodesTo.includes(f.destination)
+  );
+  return withLatency(filtered);
 }
 
 const create = async (payload: FlightCreateParams, latencyMs?: number | null) => {
@@ -109,6 +133,7 @@ export function __getFlightsStoreForDebug() {
 
 export function useFlights() {
   return {
+    filterByAirportCodes,
     getAll,
     getByCode,
     create,
