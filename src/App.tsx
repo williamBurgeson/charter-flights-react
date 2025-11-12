@@ -53,7 +53,7 @@ function App() {
         const allFlights = await getAllFlights();
         console.log('Total flights in system:', allFlights.length);
         console.log('searching for next flights');
-        const flights = await searchFlights({ departureDateFrom: new Date(), itemsFromBeginning: 10 });
+        const flights = await searchFlights({ departureDateFrom: new Date(), itemsFromBeginning: 8 });
         console.log('Flights found:', flights.length);
         setFlightsToDisplay(flights);
         })

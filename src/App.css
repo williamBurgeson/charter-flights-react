@@ -46,10 +46,20 @@ header {
   flex-direction: column;
   align-items: flex-start;
   width: 28%; /* narrow name area; allow two-line names */
+  box-sizing: border-box;
 }
 
 .airport.dest {
   align-items: flex-end; /* right-align destination */
+  /* ensure text inside destination cell is right-aligned */
+}
+
+.airport.dest .airport-name {
+  text-align: right;
+}
+
+.airport.dest .airport-code {
+  text-align: right;
 }
 
 .airport-code {
@@ -63,7 +73,7 @@ header {
   margin-top: 0.12rem;
   /* clamp to two lines where supported */
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 2; /* browser may show ellipsis when clipped */
   -webkit-box-orient: vertical;
   overflow: hidden;
   word-break: break-word;
@@ -96,17 +106,45 @@ header {
   color: #0c4f21;
 }
 
+/* Slightly smaller, keep row layout for narrow-but-not-tiny screens */
 @media (max-width: 768px) {
   header {
-    font-size: 1.4rem;
+    font-size: 1.6rem;
     padding: 1rem 0;
   }
 
   .table-box {
     width: 95%;
-    padding: 0.8rem;
+    padding: 0.9rem;
   }
 
+  /* keep the three-column row layout but reduce sizing a bit */
+  .table-row {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .airport {
+    width: 24%;
+  }
+
+  .airport-code {
+    font-size: 1.45rem;
+  }
+
+  .airport-name {
+    font-size: 0.95rem;
+    margin-top: 0.1rem;
+  }
+
+  .date {
+    font-size: 0.95rem;
+    width: 32%;
+  }
+}
+
+/* For the very narrowest screens, stack items vertically */
+@media (max-width: 420px) {
   .table-row {
     flex-direction: column;
     align-items: center;
@@ -122,7 +160,7 @@ header {
   }
 
   .airport-code {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
   }
 
   .airport-name {
