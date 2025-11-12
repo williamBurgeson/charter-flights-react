@@ -1,82 +1,64 @@
 import { useEffect, useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
-import { useContinents } from './hooks/data/useContinents'
 import useFlightSeeder from './hooks/useFlightSeeder'
-import type { Continent } from './models/continent.model'
-import { useFlights } from './hooks/data/useFlights'
+import { useFlightSearch } from './hooks/useFlightSearch.ts'
+import type { Flight } from './models/flight.model'
 
 function App() {
-  const [count, setCount] = useState(0)
-
-  const { getAll: getAllContinents } = useContinents();
-  const { getAll: getAllFlights } = useFlights();
-
-  const [continents, setContinents] = useState<Continent[] | null>(null);
-  const [flightCount, setFlightCount] = useState(0);
-
+  const [flightsToDisplay, setFlightsToDisplay] = useState<Flight[]>([])
 
   const { triggerSeed } = useFlightSeeder()
+  const { searchFlights } = useFlightSearch()
 
   useEffect(() => {
     // fire once on mount; triggerSeed is a minimal skeleton you can extend
     // we call triggerSeed without passing a create function per your request
     triggerSeed()
-      .then((flightsOutput) => {
-        console.log('Flights output:', flightsOutput);
-        getAllFlights().then((flights) => {
-          console.log(`Seed complete, ${flights.length} flights loaded:`, flights);
-          setFlightCount(flights.length);
-        })
-      })
-      .catch((err) => console.error('seed failed', err))
-  }, [triggerSeed, getAllFlights]);
+      .then(async (flightsOutput) => {
+        console.log('Flights seeded:', flightsOutput?.length);
 
-  useEffect(() => {
-    async function fetchContinents() {
-      try {
-        const data = await getAllContinents();
-        setContinents(data);
-      } catch (error) {
-        console.error('Failed to fetch continents:', error);
-      }
-    }
-    fetchContinents();
-  }, [getAllContinents]);
+        const flights = await searchFlights({ departureDateFrom: new Date(), itemsFromBeginning: 10 });
+        setFlightsToDisplay(flights);
+        })
+      .catch((err) => console.error('seed failed', err))
+          }, [searchFlights, triggerSeed]);
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <header>Global Connections</header>
+
+    <main className="content">
+      <div className="table-box">
+        {flightsToDisplay.map((flight, index) => (
+          <div key={index} className="table-row">
+            <div className="code">{flight.origin}</div>
+            <div className="date">{flight.departureTime.toISOString().split('T')[0]}</div>
+            <div className="code">{flight.destination}</div>
+          </div>
+        ))}
+        <div className="table-row">
+          <div className="code">LHR</div><div className="date">2025-11-03</div><div className="code">JFK</div>
+        </div>
+        <div className="table-row">
+          <div className="code">CDG</div><div className="date">2025-11-04</div><div className="code">NRT</div>
+        </div>
+        <div className="table-row">
+          <div className="code">SFO</div><div className="date">2025-11-05</div><div className="code">DXB</div>
+        </div>
+        <div className="table-row">
+          <div className="code">SIN</div><div className="date">2025-11-06</div><div className="code">SYD</div>
+        </div>
+        <div className="table-row">
+          <div className="code">YYZ</div><div className="date">2025-11-07</div><div className="code">ORD</div>
+        </div>
+
+        <div className="pagination">
+          <span className="arrow">&laquo;</span>
+          Displaying 1–10 of 75
+          <span className="arrow">&raquo;</span>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-      We have {flightCount} flights seeded. { flightCount > 0 && '🎉 🎉'} 
-      {continents && (
-        <ul>
-          {continents.map((continent) => (
-            <li key={continent.code}>
-              {continent.name} ({continent.code})
-            </li>
-          ))}
-        </ul>
-      )}      
+    </main>
     </>
   )
 }

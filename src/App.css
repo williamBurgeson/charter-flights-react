@@ -1,42 +1,96 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+header {
+  background-color: var(--header-bg);
+  color: white;
   text-align: center;
+  padding: 1.2rem 0;
+  font-size: 1.8rem;
+  font-weight: bold;
+  z-index: 2;
+  position: relative;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  margin: 2rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.table-box {
+  background-color: white;
+  border: 2px solid black;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 600px;
+  padding: 1rem 1rem 0.5rem;
+  box-sizing: border-box;
+}
+
+.table-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid black;
+  width: 90%;
+  margin: 0 auto;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.code {
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.date {
+  font-size: 1rem;
+}
+
+.pagination {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.arrow {
+  display: inline-block;
+  margin: 0 0.5rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: var(--header-bg);
+  cursor: pointer;
+}
+
+.arrow:hover {
+  color: #0c4f21;
+}
+
+@media (max-width: 768px) {
+  header {
+    font-size: 1.4rem;
+    padding: 1rem 0;
   }
-  to {
-    transform: rotate(360deg);
+
+  .table-box {
+    width: 95%;
+    padding: 0.8rem;
   }
-}
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+  .table-row {
+    flex-direction: column;
+    align-items: center;
   }
-}
 
-.card {
-  padding: 2em;
-}
+  .code {
+    font-size: 1.2rem;
+  }
 
-.read-the-docs {
-  color: #888;
+  .date {
+    font-size: 0.9rem;
+    margin: 0.2rem 0;
+  }
 }

@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { DEFAULT_FLIGHT_STATUS, type Flight } from '../../models/flight.model';
 import { generateGuid } from '../../utils/generateGuid';
 
