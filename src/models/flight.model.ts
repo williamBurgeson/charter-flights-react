@@ -13,8 +13,11 @@ export interface Flight extends RecordEntity, EntityWithCode, EntityWithName {
   name: string; // human-friendly display name
 
   // Routing
-  origin: string; // airport code (IATA or ICAO depending on project convention)
-  destination: string;
+  // Backwards-incompatible change: store explicit code and optional name fields
+  originAirportCode: string; // airport code (IATA or ICAO depending on project convention)
+  originAirportName: string;
+  destinationAirportCode: string;
+  destinationAirportName: string;
 
   // Times (ISO strings in UTC recommended)
   departureTime: Date; // scheduled departure (UTC)

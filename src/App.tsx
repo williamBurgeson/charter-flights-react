@@ -34,13 +34,17 @@ function App() {
 
     <main className="content">
       <div className="table-box">
-        {flightsToDisplay.map((flight, index) => (
-          <div key={index} className="table-row">
-            <div className="code">{flight.origin}</div>
-            <div className="date">{flight.departureTime.toUTCString()}</div>
-            <div className="code">{flight.destination}</div>
-          </div>
-        ))}
+        {flightsToDisplay.map((flight, index) => {
+          const originLabel = `${flight.originAirportName} (${flight.originAirportCode})`
+          const destLabel = `${flight.destinationAirportName} (${flight.destinationAirportCode})`
+          return (
+            <div key={index} className="table-row">
+              <div className="code">{originLabel}</div>
+              <div className="date">{flight.departureTime.toUTCString()}</div>
+              <div className="code">{destLabel}</div>
+            </div>
+          )
+        })}
         <div className="pagination">
           <span className="arrow">&laquo;</span>
           Displaying 1–10 of 75

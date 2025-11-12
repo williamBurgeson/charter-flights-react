@@ -192,8 +192,10 @@ export function useFlightSeeder() {
 
           try {
             const createdFlight = await createFlight({
-              departureAirport: fromAirport.code,
-              destinationAirport: toAirport.code,
+              originAirportCode: fromAirport.code,
+              destinationAirportCode: toAirport.code,
+              originAirportName: fromAirport.name,
+              destinationAirportName: toAirport.name,
               departureTime: flightTime,
               arrivalTime: addMinutes(flightTime, durationMinutes),
               distanceKm,
