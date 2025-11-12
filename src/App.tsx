@@ -4,6 +4,7 @@ import useFlightSeeder from './hooks/useFlightSeeder'
 import { useFlightSearch } from './hooks/useFlightSearch.ts'
 import type { Flight } from './models/flight.model'
 import { useFlights } from './hooks/data/useFlights.ts'
+import { LoadingComponent } from './components/loading-component.tsx'
 
 function App() {
   const [flightsToDisplay, setFlightsToDisplay] = useState<Flight[]>([])
@@ -65,6 +66,7 @@ function App() {
     <header>Global Connections</header>
 
     <main className="content">
+      <LoadingComponent />
       <div className="table-box">
         {flightsToDisplay.map((flight, index) => {
           return (
