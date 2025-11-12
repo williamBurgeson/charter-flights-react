@@ -7,12 +7,14 @@ const withLatency = <T,>(result: T) => new Promise<T>((res) => setTimeout(() => 
 
 export interface FlightCreateParams {
   // Minimal required creation parameters: caller must provide these four.
-  departureAirport: string;
-  destinationAirport: string;
+  originAirportCode: string;
+  destinationAirportCode: string;
   departureTime: Date;
   arrivalTime: Date;
   distanceKm: number;
   durationMinutes: number;
+  originAirportName: string;
+  destinationAirportName: string;
 }
 
 // Format a Date (UTC) to YYYYDDHHmm as requested (four-digit year, day, hour, minute)
@@ -42,6 +44,29 @@ const getByCode = async (code: string) => {
   return withLatency(found)
 }
 
+const filterByAirportCodes = async (candidateAirportCodesFrom: string[], candidateAirportCodesTo: string[], exclusive: boolean) => {
+
+  if (exclusive) {
+    if (candidateAirportCodesFrom.length === 0 || candidateAirportCodesTo.length === 0) {
+      return withLatency([]);
+    }
+
+    const filtered = flightsStore.filter(
+      (f) => candidateAirportCodesFrom.includes(f.originAirportCode) && candidateAirportCodesTo.includes(f.destinationAirportCode)
+    );
+    return withLatency(filtered); 
+  }
+
+  if (candidateAirportCodesFrom.length === 0 || candidateAirportCodesTo.length === 0) { 
+    return withLatency([...flightsStore]);
+  }
+
+  const filtered = flightsStore.filter(
+    (f) => candidateAirportCodesFrom.includes(f.originAirportCode) || candidateAirportCodesTo.includes(f.destinationAirportCode)
+  );
+  return withLatency(filtered);
+}
+
 const create = async (payload: FlightCreateParams, latencyMs?: number | null) => {
   latencyMs = latencyMs ?? LATENCY
   const withCustomLatency = <T,>(result: T) => new Promise<T>((res) => setTimeout(() => res(result), latencyMs!))
@@ -50,12 +75,14 @@ const create = async (payload: FlightCreateParams, latencyMs?: number | null) =>
   const code = generateGuid()
   const departure = payload.departureTime
   const arrival = payload.arrivalTime
-  const name = payload.departureAirport + formatYYYYDDHHmm(departure) + payload.destinationAirport
+  const name = (payload.originAirportName ?? payload.originAirportCode) + formatYYYYDDHHmm(departure) + (payload.destinationAirportName ?? payload.destinationAirportCode)
   const newFlight: Flight = {
     code,
     name,
-    origin: payload.departureAirport,
-    destination: payload.destinationAirport,
+    originAirportCode: payload.originAirportCode,
+    originAirportName: payload.originAirportName,
+    destinationAirportCode: payload.destinationAirportCode,
+    destinationAirportName: payload.destinationAirportName,
     departureTime: departure,
     arrivalTime: arrival,
     status: DEFAULT_FLIGHT_STATUS,
@@ -109,6 +136,7 @@ export function __getFlightsStoreForDebug() {
 
 export function useFlights() {
   return {
+    filterByAirportCodes,
     getAll,
     getByCode,
     create,
