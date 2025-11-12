@@ -6,10 +6,12 @@
  * Returns a small API object with the same public methods.
  */
 
+import { useMemo, useCallback } from 'react'
+
 export function useFlightTimeCalculator() {
 
   /** Estimate flight time in hours given distance and cruise speed (km-based). */
-  const calculateFlightTimeHours = (
+  const calculateFlightTimeHours = useCallback((
     distanceKm: number,
     cruiseSpeedKmH: number
   ): number => {
@@ -17,13 +19,13 @@ export function useFlightTimeCalculator() {
       return 0;
     }
     return distanceKm / cruiseSpeedKmH;
-  };
+  }, []);
 
   /**
    * Estimate total flight time in minutes, including ground handling if provided.
    * - Defaults to 600 km/h cruise and 30 min ground.
    */
-  const calculateFlightTimeMinutes = (
+  const calculateFlightTimeMinutes = useCallback((
     distanceKm: number,
     cruiseKmh = 600,
     groundMinutes = 30
@@ -37,12 +39,12 @@ export function useFlightTimeCalculator() {
     const gm = Number.isFinite(groundMinutes) ? Math.round(groundMinutes) : 0;
 
     return airborne + gm;
-  };
+  }, [calculateFlightTimeHours]);
 
   /**
    * Return a structured breakdown: { hours, minutes }.
    */
-  const calculateFlightTime = (
+  const calculateFlightTime = useCallback((
     distanceKm: number,
     cruiseKmh = 600,
     groundMinutes = 30
@@ -51,12 +53,12 @@ export function useFlightTimeCalculator() {
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     return { hours, minutes };
-  };
+  }, [calculateFlightTimeMinutes]);
 
   /**
    * Compute estimated arrival time given a departure Date or ISO string.
    */
-  const getArrivalTime = (
+  const getArrivalTime = useCallback((
     departure: Date | string,
     distanceKm: number,
     cruiseKmh = 600,
@@ -74,13 +76,16 @@ export function useFlightTimeCalculator() {
     const arrivalMs = dep.getTime() + totalMinutes * 60_000; // convert to ms
 
     return new Date(arrivalMs);
-  };
+  }, [calculateFlightTime]);
 
-  // Public API
-  return {
-    calculateFlightTimeMinutes,
-    calculateFlightTime,
-    getArrivalTime,
-  };
+  // Memoize the returned API so function identities are stable between renders.
+  return useMemo(
+    () => ({
+      calculateFlightTimeMinutes,
+      calculateFlightTime,
+      getArrivalTime,
+    }),
+    [calculateFlightTimeMinutes, calculateFlightTime, getArrivalTime],
+  );
 }
 export default useFlightTimeCalculator;

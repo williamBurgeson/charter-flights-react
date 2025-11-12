@@ -1,42 +1,175 @@
-#root {
-  max-width: 1280px;
+header {
+  background-color: var(--header-bg);
+  color: white;
+  text-align: center;
+  padding: 1.2rem 0;
+  font-size: 1.8rem;
+  font-weight: bold;
+  z-index: 2;
+  position: relative;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  margin: 2rem;
+}
+
+.table-box {
+  background-color: white;
+  border: 2px solid black;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 600px;
+  padding: 1rem 1rem 0.5rem;
+  box-sizing: border-box;
+}
+
+.table-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid black;
+  width: 90%;
   margin: 0 auto;
-  padding: 2rem;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.airport {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 28%; /* narrow name area; allow two-line names */
+  box-sizing: border-box;
+}
+
+.airport.dest {
+  align-items: flex-end; /* right-align destination */
+  /* ensure text inside destination cell is right-aligned */
+}
+
+.airport.dest .airport-name {
+  text-align: right;
+}
+
+.airport.dest .airport-code {
+  text-align: right;
+}
+
+.airport-code {
+  font-weight: bold;
+  font-size: 1.6rem;
+}
+
+.airport-name {
+  font-size: 1rem; /* same size as date/time */
+  color: #333;
+  margin-top: 0.12rem;
+  /* clamp to two lines where supported */
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* browser may show ellipsis when clipped */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  text-align: left;
+  max-width: 100%;
+}
+
+.date {
+  font-size: 1rem;
+  width: 36%;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.pagination {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.9rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.arrow {
+  display: inline-block;
+  margin: 0 0.5rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: var(--header-bg);
+  cursor: pointer;
+}
+
+.arrow:hover {
+  color: #0c4f21;
+}
+
+/* Slightly smaller, keep row layout for narrow-but-not-tiny screens */
+@media (max-width: 768px) {
+  header {
+    font-size: 1.6rem;
+    padding: 1rem 0;
   }
-  to {
-    transform: rotate(360deg);
+
+  .table-box {
+    width: 95%;
+    padding: 0.9rem;
+  }
+
+  /* keep the three-column row layout but reduce sizing a bit */
+  .table-row {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .airport {
+    width: 24%;
+  }
+
+  .airport-code {
+    font-size: 1.45rem;
+  }
+
+  .airport-name {
+    font-size: 0.95rem;
+    margin-top: 0.1rem;
+  }
+
+  .date {
+    font-size: 0.95rem;
+    width: 32%;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+/* For the very narrowest screens, stack items vertically */
+@media (max-width: 420px) {
+  .table-row {
+    flex-direction: column;
+    align-items: center;
   }
-}
 
-.card {
-  padding: 2em;
-}
+  .airport {
+    width: 100%;
+    align-items: center;
+  }
 
-.read-the-docs {
-  color: #888;
+  .airport.dest {
+    align-items: center;
+  }
+
+  .airport-code {
+    font-size: 1.2rem;
+  }
+
+  .airport-name {
+    font-size: 0.95rem;
+    margin-top: 0.1rem;
+  }
+
+  .date {
+    font-size: 0.9rem;
+    margin: 0.2rem 0;
+  }
 }
