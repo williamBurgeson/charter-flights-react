@@ -46,6 +46,8 @@ export function useFlightSearch() {
       candidateFlights = candidateFlights.filter(f => f.arrivalTime <= params.arrivalDateTo!);
     }
 
+    candidateFlights.sort((a, b) => a.departureTime.getTime() - b.departureTime.getTime());
+
     if (params.itemsFromBeginning !== undefined) {
       candidateFlights = candidateFlights.slice(0, params.itemsFromBeginning);
     }

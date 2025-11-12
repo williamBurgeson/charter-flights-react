@@ -12,7 +12,7 @@ export interface AirportSearchParams {
 export function useAirportSearch() {
   // This is a placeholder for the actual implementation of the airport search hook.
   // You would typically include data access logic here.  
-  const { filterByCountryValues: filterAirportsByCountryValues, filterByCodeValues: filterAirportsByCodeValues } = useAirports();
+  const { filterByCountryValues: filterAirportsByCountryValues, filterByCodeValues: filterAirportsByCodeValues, getAll: getAllAirports } = useAirports();
   
   const { filterByContinentCodeValues : filterCountriesByContinentCodeValues, filterByCodeValues: filterCountriesByCodeValues } = useTerritories();
 
@@ -20,6 +20,11 @@ export function useAirportSearch() {
     // Implementation to search airports based on params
 
     const { airportCodes, countryCodes, continentCodes } = params;
+
+    if (!airportCodes?.length && !countryCodes?.length && !continentCodes?.length) {
+      // No filters provided, return all airports
+      return await getAllAirports(); 
+    }
 
     // Resolve countries
     const [countriesFromContinents, countriesFromCodes] = await Promise.all([

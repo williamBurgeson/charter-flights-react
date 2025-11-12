@@ -223,12 +223,16 @@ export function useFlightSeeder() {
 
     const seeded = await createFlightsForDateRange(oldestFlightsDate, lastFlightsDate)
 
+    console.log(`Seeding complete: created ${seeded.length} flights from ${oldestFlightsDate.toDateString()} to ${lastFlightsDate.toDateString()}`)
+
     setAirportData(airportDataTemp)
     setTerritoryData(territoryDataTemp)
 
     return seeded
   }, [loadAirports, loadTerritories, createFlight, calculateFlightDistance, calculateFlightTimeMinutes])
 
+
+  // [loadAirports, loadTerritories, createFlight, calculateFlightDistance, calculateFlightTimeMinutes]
   return {
     triggerSeed,
     airportData,
