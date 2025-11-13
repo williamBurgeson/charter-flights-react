@@ -1,27 +1,33 @@
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import './App.css'
 
 import { LoadingComponent } from './components/loading-component.tsx'
-import { FlightSeedHost } from './components/flight-seed-host.tsx'
-import { beginPromise } from './utils/promise-suspense-support.ts'
+
 import useFlightSeeder from './hooks/useFlightSeeder.ts'
+import { makeSuspenseResource, type SuspenseResource } from './utils/suspense-resource.ts'
+import AppRouter from './components/app-router.tsx'
 
 function App() {
 
+  const flightSeederResource = useMemo(() => makeSuspenseResource<void>() as SuspenseResource, [])
+  const [registered, setRegistered] = useState(false)
   const { triggerSeed } = useFlightSeeder()
 
-
-useEffect(() => {
-  const p = triggerSeed() // may be Promise or undefined
-  if (p && typeof (p as Promise<unknown>).then === 'function') {
-    beginPromise(p as Promise<unknown>)
-    ;(p as Promise<unknown>).catch((e) => console.error('seed failed', e))
-  } else {
-    // already seeded synchronously: mark ready so read() doesn't hang
-    // if your resource has markPromiseReady(), call it; otherwise:
-    beginPromise(Promise.resolve(undefined))
-  }
-}, [triggerSeed])
+  useEffect(() => {
+    let mounted = true
+    const p = triggerSeed()
+    if (p && typeof (p as Promise<void>).then === 'function') {
+      flightSeederResource.begin(p as Promise<void>)
+      ;(p as Promise<void>).finally(() => {
+        if (mounted) setRegistered(true)
+      })
+    } else {
+      flightSeederResource.markReady()
+      setRegistered(true)
+    }
+    return () => { mounted = false }
+  }, [triggerSeed, flightSeederResource])
+  if (!registered) return <LoadingComponent />
 
   return (
     <>
@@ -29,8 +35,7 @@ useEffect(() => {
 
     <main className="content">
       <Suspense fallback={<LoadingComponent />}>
-        <FlightSeedHost />
-        <div>Done</div>
+        <AppRouter suspenseResource ={flightSeederResource} />
       </Suspense>
     </main>
     </>
