@@ -1,3 +1,17 @@
+:root {
+  --drawer-width: 280px; /* keep in sync with left-drawer.tsx */
+  --content-max: 1200px; /* optional, if you use a max content width */
+}
+
+/* header markup contains an inner element and a matching content-inner element */
+.header-inner, .content-inner {
+  position: relative;
+  width: 100%;
+  max-width: var(--content-max);
+  box-sizing: border-box;
+  text-align: center;
+}
+
 header {
   background-color: var(--header-bg);
   color: white;
@@ -7,6 +21,27 @@ header {
   font-weight: bold;
   z-index: 2;
   position: relative;
+}
+
+/* app-header grid: on desktop the header is split into [drawer][content] so
+   the header title can be centered relative to the content column */
+.app-header {
+  /* default styles for mobile: keep the title centered and allow absolute hamburger */
+  display: block;
+}
+
+@media (min-width: 900px) {
+  .app-header {
+    display: grid;
+    grid-template-columns: var(--drawer-width) 1fr;
+    align-items: center;
+  }
+
+  /* place the visible title into the second (content) column and center it */
+  .app-header .header-inner {
+    grid-column: 2;
+    justify-self: center;
+  }
 }
 
 .content {
@@ -21,7 +56,11 @@ header {
    so it isn't covered by the drawer. MUI default 'md' breakpoint is 900px. */
 @media (min-width: 900px) {
   .content {
-    margin-left: 280px; /* slightly wider than drawer to add breathing room */
+    margin-left: var(--drawer-width); /* shift content right when drawer is permanent */
+  }
+  .header-inner, .content-inner {
+    left: calc(50% + var(--drawer-width) / 2);
+    transform: translateX(-50%);
   }
   header {
     margin-left: 0; /* keep header full-width; drawer will sit beneath it visually */
