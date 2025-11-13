@@ -1,11 +1,11 @@
-.temp-map-page {
+.map-page {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 1rem;
 }
 
-.temp-map-page h2 {
+.map-page h2 {
   margin-bottom: 0.75rem;
 }
 
@@ -13,7 +13,7 @@
 .map-container {
   width: 100%;
   max-width: 1200px;
-  height: 520px; /* fixed height */
+  height: 420px; /* fixed height */
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 

@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import './MapPage.css'
+import './map.temp.css'
 
-export default function MapPage() {
+export default function MapTemp() {
   const mapRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -29,11 +29,9 @@ export default function MapPage() {
   }, [])
 
   return (
-    <div className="table-box">
-      <div className="map-page">
-        <h2>World Map (Leaflet)</h2>
-        <div className="map-container" ref={mapRef} aria-label="world map" />
-      </div>
+    <div className="temp-map-page">
+      <h2>World Map (Leaflet) — temp2</h2>
+      <div className="map-container" ref={mapRef} aria-label="world map" />
     </div>
   )
 }
