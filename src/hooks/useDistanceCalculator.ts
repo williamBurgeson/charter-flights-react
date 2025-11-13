@@ -11,11 +11,12 @@ export type DistanceUnit = "km" | "miles" | "nautical-miles";
 export type MatchReason = "within-radius" | "nearest-N" | "continent-match";
 
 export interface AirportDistanceSearchOptions extends AirportSearchParams {
-  centerLat: number;
-  centerLon: number;
+  centerLat?: number;
+  centerLon?: number;
   maxResults?: number;
   radius?: number;
   units?: DistanceUnit;
+  useCurrentLocationIfAvailable: boolean;
 }
 
 export interface AirportWithDistanceSearchInfo {
@@ -55,6 +56,46 @@ function convertFromKilometers(distance: number, toUnit: DistanceUnit): number {
     case "nautical-miles": return distance / KM_PER_NAUTICAL_MILE;
     default: return distance;
   }
+}
+
+async function getCurrrentLocation(options?: { timeoutMs?: number; maximumAgeMs?: number }): Promise<GeoPoint | null> {
+  if (typeof navigator === 'undefined' || !('geolocation' in navigator)) return null
+
+  // If Permissions API is available, bail out quickly on explicit deny
+  try {
+    if ('permissions' in navigator) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const status = await (navigator as any).permissions.query({ name: 'geolocation' })
+      if (status?.state === 'denied') return null
+    }
+  } catch {
+    // ignore permission errors and continue to attempt a snapshot
+  }
+
+  const timeout = options?.timeoutMs ?? 10000
+  const maximumAge = options?.maximumAgeMs ?? 0
+
+  return new Promise<GeoPoint | null>((resolve) => {
+    let timedOut = false
+    const timer = window.setTimeout(() => {
+      timedOut = true
+      resolve(null)
+    }, timeout)
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (timer) clearTimeout(timer)
+        if (timedOut) return resolve(null)
+        resolve({ lat_decimal: pos.coords.latitude, lon_decimal: pos.coords.longitude })
+      },
+      () => {
+        if (timer) clearTimeout(timer)
+        if (timedOut) return resolve(null)
+        resolve(null)
+      },
+      { enableHighAccuracy: false, timeout, maximumAge }
+    )
+  })
 }
 
 // Haversine formula
@@ -131,16 +172,31 @@ export function useDistanceCalculator() {
   }, [filterAirportsByCountryValues, filterAirportsByCodeValues, filterCountriesByContinentCodeValues, filterCountriesByCodeValues]);
 
   // Public method: find airports near a given location
+  // Returns null if location could not be determined; either because
+  // lat/lon were not provided or geolocation could not determine location
   const findNearbyAirports = useCallback(async (
     options: AirportDistanceSearchOptions
-  ): Promise<AirportWithDistanceSearchInfo[]> => {
+  ): Promise<AirportWithDistanceSearchInfo[] | null> => {
 
     const {
-      centerLat, centerLon,
       maxResults, radius,
       units = "km",
       airportCodes, countryCodes, continentCodes
     } = options;
+
+    if (options.useCurrentLocationIfAvailable && (options.centerLat === undefined || options.centerLon === undefined)) {  
+      const location = await getCurrrentLocation({ timeoutMs: 5000, maximumAgeMs: 10 * 60 * 1000 });
+      if (location) {
+        options.centerLat = location.lat_decimal;
+        options.centerLon = location.lon_decimal;
+      }
+    }
+
+    if (options.centerLat === undefined || options.centerLon === undefined) {
+      return null;
+    } 
+
+    const { centerLat, centerLon } = options;
 
     validateCoordinates(centerLat, centerLon);
 
@@ -183,5 +239,5 @@ export function useDistanceCalculator() {
   }, [getAllAirports, getFilteredAirports]);
 
   // Public API
-  return { calculateDistance, findNearbyAirports };
+  return { getCurrrentLocation, calculateDistance, findNearbyAirports };
 }
