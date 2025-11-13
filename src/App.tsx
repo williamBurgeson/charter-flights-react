@@ -3,6 +3,10 @@ import './App.css'
 
 import { LoadingComponent } from './components/loading-component.tsx'
 import DemoDrawer from './components/demo-drawer'
+import IconButton from '@mui/material/IconButton'
+import MenuIcon from '@mui/icons-material/Menu'
+import { useTheme } from '@mui/material/styles'
+import useMediaQuery from '@mui/material/useMediaQuery'
 import { BrowserRouter } from 'react-router-dom'
 
 import useFlightSeeder from './hooks/useFlightSeeder.ts'
@@ -12,31 +16,36 @@ import AppRouter from './components/app-router.tsx'
 function App() {
 
   const flightSeederResource = useMemo(() => makeSuspenseResource<void>() as SuspenseResource, [])
-  const [registered, setRegistered] = useState(false)
+  
   const { triggerSeed } = useFlightSeeder()
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const theme = useTheme()
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'))
 
   useEffect(() => {
-    let mounted = true
     const p = triggerSeed()
     if (p && typeof (p as Promise<void>).then === 'function') {
       flightSeederResource.begin(p as Promise<void>)
-      ;(p as Promise<void>).finally(() => {
-        if (mounted) setRegistered(true)
-      })
+      // resource settles the suspense consumers; no local state required
     } else {
       flightSeederResource.markReady()
-      setRegistered(true)
     }
-    return () => { mounted = false }
   }, [triggerSeed, flightSeederResource])
-  if (!registered) return <LoadingComponent />
 
   return (
     <>
     <BrowserRouter>
-      <DemoDrawer />
+      <DemoDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
-      <header>Global Connections</header>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}>
+        {/* show hamburger on mobile only */}
+        {!isDesktop && (
+          <IconButton aria-label="open menu" onClick={() => setDrawerOpen(true)} sx={{ position: 'absolute', left: 8 }} color="inherit">
+            <MenuIcon />
+          </IconButton>
+        )}
+        <div>Global Connections</div>
+      </header>
 
       <main className="content">
         <Suspense fallback={<LoadingComponent />}>
