@@ -58,6 +58,7 @@ export function useFlightSeeder() {
   }, [getAllTerritories])
 
   const seededRef = useRef(false)
+  const flightsCreatedRef = useRef<number>(0)
 
   const triggerSeed = useCallback(async () => {
     if (seededRef.current) return
@@ -188,7 +189,11 @@ export function useFlightSeeder() {
           const distanceKm = calculateFlightDistance(fromAirport, toAirport)
           const durationMinutes = calculateFlightTimeMinutes(distanceKm)
 
-          const latencyMs = 0 // zero latency for seeding
+          // ????? we will seed approx 9000 flights. I want to create a noticeable delay to demonstrate loading state
+          // but not too long to be annoying. So we set the timeout to 1ms for every 25th flight added, otherwise 0ms, which 
+          // I have configured within the create function of useFlights to just return the result synchronously ie immediately
+          flightsCreatedRef.current += 1
+          const latencyMs = flightsCreatedRef.current % 25 === 0 ? 1 : 0  // zero latency for seeding
 
           try {
             const createdFlight = await createFlight({

@@ -1,0 +1,41 @@
+.table-box.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 420px;
+  height: 281px;
+  background-image: url(plane-in-sky.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.table-box.loading .loading-text {
+  font-style: italic;
+  color: #22b; /* keep blue theme */
+  position: relative;
+  z-index: 1;
+  padding: 2em;
+  /* ensure readable spacing */
+}
+
+.table-box.loading .loading-text::before {
+  /* gentle lozenge pill behind the text: max opacity kept <= 0.3
+     - centered on the caption, rounded corners, soft radial falloff */
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  /* slightly larger than the text element so the pill breathes */
+  width: calc(100% + 1.2em);
+  height: calc(100% + 0.6em);
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 999px; /* lozenge */
+  background: radial-gradient(ellipse at center,
+    rgba(255,255,255,0.40) 0%,
+    rgba(255,255,255,0.22) 10%,
+    rgba(255,255,255,0.12) 30%,
+    rgba(255,255,255,0) 100%
+  );
+}
