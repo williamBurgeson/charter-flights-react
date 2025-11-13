@@ -2,6 +2,8 @@ import { Suspense, useEffect, useMemo, useState } from 'react'
 import './App.css'
 
 import { LoadingComponent } from './components/loading-component.tsx'
+import DemoDrawer from './components/demo-drawer'
+import { BrowserRouter } from 'react-router-dom'
 
 import useFlightSeeder from './hooks/useFlightSeeder.ts'
 import { makeSuspenseResource, type SuspenseResource } from './utils/suspense-resource.ts'
@@ -31,13 +33,17 @@ function App() {
 
   return (
     <>
-    <header>Global Connections</header>
+    <BrowserRouter>
+      <DemoDrawer />
 
-    <main className="content">
-      <Suspense fallback={<LoadingComponent />}>
-        <AppRouter suspenseResource ={flightSeederResource} />
-      </Suspense>
-    </main>
+      <header>Global Connections</header>
+
+      <main className="content">
+        <Suspense fallback={<LoadingComponent />}>
+          <AppRouter suspenseResource={flightSeederResource} />
+        </Suspense>
+      </main>
+    </BrowserRouter>
     </>
   )
 }
