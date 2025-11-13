@@ -2,7 +2,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react'
 import './App.css'
 
 import { LoadingComponent } from './components/loading-component.tsx'
-import DemoDrawer from './components/demo-drawer'
+import LeftDrawer from './components/left-drawer.tsx'
 import IconButton from '@mui/material/IconButton'
 import MenuIcon from '@mui/icons-material/Menu'
 import { useTheme } from '@mui/material/styles'
@@ -35,7 +35,7 @@ function App() {
   return (
     <>
     <BrowserRouter>
-      <DemoDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <LeftDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}>
         {/* show hamburger on mobile only */}

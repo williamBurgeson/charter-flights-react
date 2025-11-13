@@ -11,12 +11,13 @@ import useMediaQuery from '@mui/material/useMediaQuery'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home' },
+  { to: '/map', label: 'Map' },
   { to: '/flights', label: 'Flights' },
   { to: '/airports', label: 'Airports' },
   { to: '/settings', label: 'Settings' },
 ]
 
-export default function DemoDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+export default function LeftDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const drawerWidth = 260
   const theme = useTheme()
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'))
