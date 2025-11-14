@@ -76,14 +76,13 @@ header {
     box-sizing: border-box;
   }
 }
-/* 
 .header-spacer,
 .content-spacer {
-  /* flexible gutters: 1 (grow) * /
+  /* flexible outer gutters so the center slab stays centered (1 / center / 1) */
   flex: 1 1 0;
   width: 0;
   min-width: 0;
-} */
+}
 
 .app-header .content-align-outer {
   /* center slab: middle of 3 — base 800px but allowed to shrink on small screens */
@@ -107,10 +106,46 @@ header {
   box-sizing: border-box;
 }
 
-/* Make the content column the middle of three: left spacer (1) / content (800px) / right spacer (1) */
+/* Make the content column the middle of three: left spacer (1) / content (800px) / right spacer (1)
+   The .content element is the center column (already constrained at the outer level).
+   Inside .content we also have inner spacers (content-spacer-inner) that act as flexible gutters
+   around .content-inner. */
 
-.content-container .content { width:100%; flex: 1 600px 1; }
-.content-inner { width: 100%; box-sizing: border-box; }
+/* main content becomes a flex row so its inner spacers can behave as gutters */
+.content {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* inner spacers act as flexible gutters (1 / center / 1) */
+.content-spacer-inner {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* the real content: constrained, fills the middle of the inner row */
+.content-inner {
+  /* Fixed nominal width on larger viewports, do not grow */
+  flex: 0 0 600px;    /* fixed 600px center column to match .table-box */
+  width: 600px;
+  max-width: 600px;
+  box-sizing: border-box;
+  padding: 0 16px;
+  display: flex;
+  justify-content: center; /* center inner content (e.g., .table-box) */
+}
+
+/* On mobile, allow the center column to shrink and become fluid */
+@media (max-width: 600px) {
+  .content-inner {
+    flex: 0 1 100%;
+    width: 100%;
+    max-width: var(--content-max);
+    justify-content: normal;
+  }
+}
 
 /* Background and translucent overlay previously lived on `body`.
    They are intentionally moved to the main content slab so the header
