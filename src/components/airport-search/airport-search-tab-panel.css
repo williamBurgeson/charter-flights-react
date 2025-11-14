@@ -1,0 +1,18 @@
+.airport-search-tab-panel {
+  padding: 12px;
+  background: var(--card-bg, #fff);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 6px;
+}
+
+.airport-search-tab-panel-first,
+.airport-search-tab-panel-second,
+.airport-search-tab-panel-third {
+  padding: 12px;
+  background: rgba(0,0,0,0.02);
+  border-radius: 4px;
+}
+
+.airport-search-tab-panel h3 {
+  margin: 0 0 8px 0;
+}
