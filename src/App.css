@@ -1,6 +1,9 @@
 :root {
-  --drawer-width: 280px; /* keep in sync with left-drawer.tsx */
+  --drawer-width: 260px; /* keep in sync with left-drawer.tsx (260) */
   --content-max: 1200px; /* optional, if you use a max content width */
+  --inner-content-standard-width: 600px;
+  --mobile-breakpoint: 900px;
+  --full-width-available: calc(var(--drawer-width) + var(--inner-content-standard-width) + 40px); /* 40px for a small margin */
 }
 
 /* header markup contains an inner element and a matching content-inner element */
@@ -128,9 +131,9 @@ header {
 /* the real content: constrained, fills the middle of the inner row */
 .content-inner {
   /* Fixed nominal width on larger viewports, do not grow */
-  flex: 0 0 600px;    /* fixed 600px center column to match .table-box */
-  width: 600px;
-  max-width: 600px;
+  flex: 0 0 var(--inner-content-standard-width);    /* fixed 600px center column to match .table-box */
+  width: var(--inner-content-standard-width);
+  max-width: var(--inner-content-standard-width);
   box-sizing: border-box;
   padding: 0 16px;
   display: flex;
@@ -138,7 +141,7 @@ header {
 }
 
 /* On mobile, allow the center column to shrink and become fluid */
-@media (max-width: 600px) {
+@media (max-width: var(--inner-content-standard-width)) {
   .content-inner {
     flex: 0 1 100%;
     width: 100%;
@@ -175,7 +178,7 @@ header {
   pointer-events: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: var(--mobile-breakpoint)) {
   .content {
     background-image: url('world-relief-satellite-map-smaller.png');
     background-size: 770px auto;
@@ -189,11 +192,51 @@ header {
   }
 }
 
-@media (prefers-reduced-data: reduce) and (max-width: 768px) {
+@media (prefers-reduced-data: reduce) and (max-width: var(--mobile-breakpoint)) {
   .content {
     background-image: url('world-relief-satellite-map-smallest.png');
     background-size: 770px auto;
   }
+}
+
+/* Note: some browsers have inconsistent support for custom properties inside
+   media query expressions. Replace the var()-based query with explicit
+   numbers so the rule applies reliably across all targets.
+
+   Values derived from :root vars:
+     --mobile-breakpoint (md) = 900px
+     --drawer-width = 260px
+     margin = 40px
+   => max = 900 + 260 + 40 = 1200px
+*/
+@media (min-width: 900px) and (max-width: 1200px) {
+  /* Left spacer becomes fixed at the drawer width so the center slab sits
+     entirely to the right of the drawer; the right spacer collapses to zero
+     so there is no implicit gutter on the right side. This keeps the layout
+     in the flex domain and avoids padding/transform hacks. */
+  .content-spacer-left {
+    flex: 0 0 var(--drawer-width);
+    width: var(--drawer-width);
+    min-width: var(--drawer-width);
+  }
+
+  .content-spacer-right {
+    flex: 0 0 0;
+    width: 0;
+    min-width: 0;
+  }
+
+  /* Let the .content area fill the remaining horizontal space between the spacers. */
+  .content {
+    width: 100%;
+    background-color: red;
+  }
+
+  .content-inner {
+    margin: 0 auto;
+    transform: none;
+  }
+
 }
 
 /* When the permanent drawer is visible on desktop, push content to the right
