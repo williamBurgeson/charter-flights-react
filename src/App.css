@@ -135,7 +135,7 @@ header {
   width: var(--inner-content-standard-width);
   max-width: var(--inner-content-standard-width);
   box-sizing: border-box;
-  padding: 0 16px;
+  padding: 16px;
   display: flex;
   justify-content: center; /* center inner content (e.g., .table-box) */
 }
@@ -214,22 +214,21 @@ header {
      entirely to the right of the drawer; the right spacer collapses to zero
      so there is no implicit gutter on the right side. This keeps the layout
      in the flex domain and avoids padding/transform hacks. */
-  .content-spacer-left {
+  .content-spacer-left, .header-spacer-left {
     flex: 0 0 var(--drawer-width);
     width: var(--drawer-width);
     min-width: var(--drawer-width);
   }
 
-  .content-spacer-right {
+  .content-spacer-right, .header-spacer-right {
     flex: 0 0 0;
     width: 0;
     min-width: 0;
   }
 
   /* Let the .content area fill the remaining horizontal space between the spacers. */
-  .content {
+  .content, .content-align-outer {
     width: 100%;
-    background-color: red;
   }
 
   .content-inner {
