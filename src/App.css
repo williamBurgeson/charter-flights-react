@@ -91,15 +91,17 @@ header {
 /* When the permanent drawer is visible on desktop, push content to the right
    so it isn't covered by the drawer. MUI default 'md' breakpoint is 900px. */
 @media (min-width: 900px) {
+  /* Keep content centered at all widths; remove desktop push offsets. */
   .content {
-    margin-left: var(--drawer-width); /* shift content right when drawer is permanent */
+    margin: 2rem auto; /* keep vertical spacing and center horizontally */
   }
   .header-inner, .content-inner {
-    left: calc(50% + var(--drawer-width) / 2);
-    transform: translateX(-50%);
+    left: auto;
+    transform: none;
+    margin: 0;
   }
   header {
-    margin-left: 0; /* keep header full-width; drawer will sit beneath it visually */
+    margin-left: 0;
   }
 }
 

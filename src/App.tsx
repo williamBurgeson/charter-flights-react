@@ -56,14 +56,17 @@ function App() {
         </div>
        <div className="header-spacer header-spacer-right" />
       </header>
-
-      <main className="content">
-        <div className="content-inner">
-          <Suspense fallback={<LoadingComponent />}>
-            <AppRouter suspenseResource={flightSeederResource} />
-          </Suspense>
-        </div>
-      </main>
+      <div className="content-container">
+        <div className="content-spacer content-spacer-left" />
+        <main className="content">
+          <div className="content-inner">
+            <Suspense fallback={<LoadingComponent />}>
+              <AppRouter suspenseResource={flightSeederResource} />
+            </Suspense>
+          </div>
+        </main>
+        <div className="content-spacer content-spacer-right" />
+      </div>
     </BrowserRouter>
     </>
   )
