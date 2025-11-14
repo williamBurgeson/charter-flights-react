@@ -5220,8 +5220,8 @@
     "name": "Yalinga",
     "city": "Yalinga",
     "country": "CF",
-    "lat_decimal": 45.154,
-    "lon_decimal": -89.111
+    "lat_decimal": 6.28,
+    "lon_decimal": -23.25
   },
   {
     "code": "BSG",
@@ -13589,7 +13589,7 @@
     "city": "Coban",
     "country": "GT",
     "lat_decimal": 15.469,
-    "lon_decimal": -90.407
+    "lon_decimal": -22.533
   },
   {
     "code": "GUA",
@@ -20629,7 +20629,7 @@
     "city": "Provideniya Bay",
     "country": "RU",
     "lat_decimal": 64.38,
-    "lon_decimal": -173.247
+    "lon_decimal": -180
   },
   {
     "code": "GDX",
