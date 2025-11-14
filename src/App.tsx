@@ -2,7 +2,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react'
 import './App.css'
 
 import { LoadingComponent } from './components/loading-component.tsx'
-import DemoDrawer from './components/demo-drawer'
+import LeftDrawer from './components/left-drawer.tsx'
 import IconButton from '@mui/material/IconButton'
 import MenuIcon from '@mui/icons-material/Menu'
 import { useTheme } from '@mui/material/styles'
@@ -35,23 +35,40 @@ function App() {
   return (
     <>
     <BrowserRouter>
-      <DemoDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <LeftDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}>
-        {/* show hamburger on mobile only */}
+  <header className="app-header" style={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}>
+       <div className="header-spacer header-spacer-left" />
+       <div className="content-align-outer">
+       {/* show hamburger on mobile only */}
         {!isDesktop && (
-          <IconButton aria-label="open menu" onClick={() => setDrawerOpen(true)} sx={{ position: 'absolute', left: 8 }} color="inherit">
+          <IconButton
+            aria-label="open menu"
+            onClick={() => setDrawerOpen(true)}
+            sx={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', zIndex: theme.zIndex.drawer + 1 }}
+             color="inherit"
+          >
             <MenuIcon />
           </IconButton>
         )}
-        <div>Global Connections</div>
-      </header>
 
-      <main className="content">
-        <Suspense fallback={<LoadingComponent />}>
-          <AppRouter suspenseResource={flightSeederResource} />
-        </Suspense>
-      </main>
+          <div className="header-inner">Global Connections</div>
+        </div>
+       <div className="header-spacer header-spacer-right" />
+      </header>
+      <div className="content-container">
+        <div className="content-spacer content-spacer-left" />
+        <main className="content">
+          <div className="content-spacer-inner content-spacer-inner-left" />
+          <div className="content-inner">
+            <Suspense fallback={<LoadingComponent />}>
+              <AppRouter suspenseResource={flightSeederResource} />
+            </Suspense>
+          </div>
+          <div className="content-spacer-inner content-spacer-inner-right" />
+        </main>
+        <div className="content-spacer content-spacer-right" />
+      </div>
     </BrowserRouter>
     </>
   )

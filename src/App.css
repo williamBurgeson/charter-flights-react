@@ -1,3 +1,20 @@
+:root {
+  --drawer-width: 260px; /* keep in sync with left-drawer.tsx (260) */
+  --content-max: 1200px; /* optional, if you use a max content width */
+  --inner-content-standard-width: 600px;
+  --mobile-breakpoint: 900px;
+  --full-width-available: calc(var(--drawer-width) + var(--inner-content-standard-width) + 40px); /* 40px for a small margin */
+}
+
+/* header markup contains an inner element and a matching content-inner element */
+.header-inner, .content-inner {
+  position: relative;
+  width: 100%;
+  max-width: var(--content-max);
+  box-sizing: border-box;
+  text-align: center;
+}
+
 header {
   background-color: var(--header-bg);
   color: white;
@@ -9,22 +26,234 @@ header {
   position: relative;
 }
 
-.content {
+/* aligns with the body (unlike the header) */
+.content-align-outer {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0;           /* center the constrained slab */
+  padding: 0;         /* small horizontal gutter */
+  box-sizing: border-box;
+}
+
+/* Make the header's center slab expand and align with the main content.
+   We target the explicit class inside `.app-header` so we don't rely on
+   DOM child combinators and keep the rule resilient to markup changes. */
+.app-header .content-align-outer {
+  flex: 1 1 auto;           /* expand to fill center space in the header flex row */
+  display: flex;
+  align-items: center;      /* vertically center header items */
+  justify-content: center;  /* change to flex-start to left-align title inside slab */
+}
+
+/* app-header grid: on desktop the header is split into [drawer][content] so
+   the header title can be centered relative to the content column */
+.app-header {
+  /* three-part flex row: left spacer / center slab / right spacer */
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: var(--z-header, 1100);
+}
+
+@media (min-width: 900px) {
+  .app-header {
+    /* keep flex layout on desktop as well */
+    display: flex;
+    align-items: center;
+  }
+
+  /* Reset old positional centering (we now center via the flex slab).
+     This avoids the left/transform hack interfering with the flex-based approach. */
+  .header-inner, .content-inner {
+    left: auto;
+    transform: none;
+    margin: 0;
+  }
+
+  /* Ensure the constrained slab applies on desktop as well */
+  .content-align-outer {
+    width: 100%;
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: 0;
+    box-sizing: border-box;
+  }
+}
+.header-spacer,
+.content-spacer {
+  /* flexible outer gutters so the center slab stays centered (1 / center / 1) */
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+}
+
+.app-header .content-align-outer {
+  /* center slab: middle of 3 — base 800px but allowed to shrink on small screens */
+  flex: 0 1 800px; /* don't grow, allow shrink, base = 800px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  box-sizing: border-box;
+}
+
+.content-container {
   position: relative;
   z-index: 2;
   display: flex;
-  justify-content: center;
-  margin: 2rem;
+  align-items: flex-start;
+  width: 100%;
+  _padding: 2rem 0; /* vertical spacing, no horizontal margin so it fills viewport */
+  box-sizing: border-box;
+}
+
+/* Make the content column the middle of three: left spacer (1) / content (800px) / right spacer (1)
+   The .content element is the center column (already constrained at the outer level).
+   Inside .content we also have inner spacers (content-spacer-inner) that act as flexible gutters
+   around .content-inner. */
+
+/* main content becomes a flex row so its inner spacers can behave as gutters */
+.content {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* inner spacers act as flexible gutters (1 / center / 1) */
+.content-spacer-inner {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* the real content: constrained, fills the middle of the inner row */
+.content-inner {
+  /* Fixed nominal width on larger viewports, do not grow */
+  flex: 0 0 var(--inner-content-standard-width);    /* fixed 600px center column to match .table-box */
+  width: var(--inner-content-standard-width);
+  max-width: var(--inner-content-standard-width);
+  box-sizing: border-box;
+  padding: 16px;
+  display: flex;
+  justify-content: center; /* center inner content (e.g., .table-box) */
+}
+
+/* On mobile, allow the center column to shrink and become fluid.
+   Use an explicit breakpoint (600px) rather than var() because custom
+   properties inside media queries are not reliably supported in all UAs. */
+@media (max-width: 600px) {
+  .content-inner {
+    flex: 0 1 100%;
+    width: 100%;
+    max-width: var(--content-max);
+    justify-content: normal;
+  }
+}
+
+/* Background and translucent overlay previously lived on `body`.
+   They are intentionally moved to the main content slab so the header
+   layout is independent of the app background. The overlay uses a
+   fixed pseudo-element so it covers the viewport but is scoped
+   to the presence of the .content element. */
+.content {
+  /* world relief / satellite map background */
+  background-image: url('world-relief-satellite-map.png');
+  background-repeat: repeat-y;
+  /* keep the original horizontal offset but pin vertical origin to 0 */
+  background-position: calc(50% + var(--x-offset, 0px)) 0px;
+  background-attachment: fixed;
+  /* anchor the background to the viewport top so the map repeats from top:0
+     rather than being centered inside the .content box (which sits below the header). */
+  background-size: auto 800px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.content::before {
+  content: "";
+  position: fixed; /* cover viewport */
+  inset: 0;
+  background: rgba(255, 255, 255, 0.6);
+  z-index: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .content {
+    background-image: url('world-relief-satellite-map-smaller.png');
+    background-size: 770px auto;
+  }
+}
+
+@media (prefers-reduced-data: reduce) {
+  .content {
+    background-image: url('world-relief-satellite-map-smallest.png');
+    background-size: auto 800px;
+  }
+}
+
+@media (prefers-reduced-data: reduce) and (max-width: 900px) {
+  .content {
+    background-image: url('world-relief-satellite-map-smallest.png');
+    background-size: 770px auto;
+  }
+}
+
+/* Note: some browsers have inconsistent support for custom properties inside
+   media query expressions. Replace the var()-based query with explicit
+   numbers so the rule applies reliably across all targets.
+
+   Values derived from :root vars:
+     --mobile-breakpoint (md) = 900px
+     --drawer-width = 260px
+     margin = 40px
+   => max = 900 + 260 + 40 = 1200px
+*/
+@media (min-width: 900px) and (max-width: 1200px) {
+  /* Left spacer becomes fixed at the drawer width so the center slab sits
+     entirely to the right of the drawer; the right spacer collapses to zero
+     so there is no implicit gutter on the right side. This keeps the layout
+     in the flex domain and avoids padding/transform hacks. */
+  .content-spacer-left, .header-spacer-left {
+    flex: 0 0 var(--drawer-width);
+    width: var(--drawer-width);
+    min-width: var(--drawer-width);
+  }
+
+  .content-spacer-right, .header-spacer-right {
+    flex: 0 0 0;
+    width: 0;
+    min-width: 0;
+  }
+
+  /* Let the .content area fill the remaining horizontal space between the spacers. */
+  .content, .content-align-outer {
+    width: 100%;
+  }
+
+  .content-inner {
+    margin: 0 auto;
+    transform: none;
+  }
+
 }
 
 /* When the permanent drawer is visible on desktop, push content to the right
    so it isn't covered by the drawer. MUI default 'md' breakpoint is 900px. */
 @media (min-width: 900px) {
+  /* Keep content centered at all widths; remove desktop push offsets. */
   .content {
-    margin-left: 280px; /* slightly wider than drawer to add breathing room */
+    margin: 0; /* keep vertical spacing and center horizontally */
+  }
+  .header-inner, .content-inner {
+    left: auto;
+    transform: none;
+    margin: 0;
   }
   header {
-    margin-left: 0; /* keep header full-width; drawer will sit beneath it visually */
+    margin-left: 0;
   }
 }
 

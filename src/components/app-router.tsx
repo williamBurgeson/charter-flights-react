@@ -1,7 +1,9 @@
 import { Routes, Route } from 'react-router-dom'
 import HomePage from '../pages/HomePage'
+import MapPage from '../pages/MapPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import type { SuspenseResource } from '../utils/suspense-resource'
+import { EmptyPage } from '../pages/EmptyPage'
 
 export default function AppRouter({ suspenseResource }: { suspenseResource: SuspenseResource }) {
 	// suspend the router until seeding completes
@@ -9,8 +11,10 @@ export default function AppRouter({ suspenseResource }: { suspenseResource: Susp
 
 	return (
 		<Routes>
-			<Route path="/" element={<HomePage />} />
+			<Route index element={<HomePage />} />
+      <Route path="/map" element={<MapPage />} />
 			<Route path="*" element={<NotFoundPage />} />
+      <Route path="/empty" element={<EmptyPage />} />
 		</Routes>
 	)
 }
