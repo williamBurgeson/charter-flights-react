@@ -7,4 +7,13 @@ import type { RecordEntity } from './record-entity';
 // Canonical set of continent codes used across the app
 export type ContinentCode = 'AF' | 'AS' | 'EU' | 'NA' | 'OC' | 'SA';
 
-export interface Continent extends RecordEntity, EntityWithCode, EntityWithName {}
+export interface Continent extends RecordEntity, EntityWithCode, EntityWithName {
+	/** Southern-most latitude (decimal degrees) */
+	minLat: number
+	/** Northern-most latitude (decimal degrees) */
+	maxLat: number
+	/** Western-most longitude (decimal degrees, -180..180) */
+	minLon: number
+	/** Eastern-most longitude (decimal degrees, -180..180) */
+	maxLon: number
+}
