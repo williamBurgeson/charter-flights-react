@@ -1,4 +1,4 @@
-import AirportSearchComponent from '../components/AirportSearchComponent'
+import AirportSearchComponent from '../components/airport-search/AirportSearchComponent'
 
 export default function AirportSearchPage() {
   return (
