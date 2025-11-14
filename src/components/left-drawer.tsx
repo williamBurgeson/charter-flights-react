@@ -12,6 +12,7 @@ import useMediaQuery from '@mui/material/useMediaQuery'
 const NAV_ITEMS = [
   { to: '/', label: 'Home' },
   { to: '/map', label: 'Map' },
+  { to: '/airports', label: 'Airports' },
   { to: '/flights', label: 'Flights' },
   { to: '/airports', label: 'Airports' },
   { to: '/settings', label: 'Settings' },
