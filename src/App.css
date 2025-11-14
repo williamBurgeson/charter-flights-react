@@ -25,9 +25,21 @@ header {
 
 /* aligns with the body (unlike the header) */
 .content-align-outer {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;           /* center the constrained slab */
+  padding: 0 16px;         /* small horizontal gutter */
+  box-sizing: border-box;
+}
+
+/* Make the header's center slab expand and align with the main content.
+   We target the explicit class inside `.app-header` so we don't rely on
+   DOM child combinators and keep the rule resilient to markup changes. */
+.app-header .content-align-outer {
+  flex: 1 1 auto;           /* expand to fill center space in the header flex row */
   display: flex;
-  justify-content: center;
-  width: 800px;
+  align-items: center;      /* vertically center header items */
+  justify-content: center;  /* change to flex-start to left-align title inside slab */
 }
 
 /* app-header grid: on desktop the header is split into [drawer][content] so
@@ -48,6 +60,23 @@ header {
   .app-header .header-inner {
     grid-column: 2;
     justify-self: center;
+  }
+
+  /* Reset old positional centering (we now center via the flex slab).
+     This avoids the left/transform hack interfering with the flex-based approach. */
+  .header-inner, .content-inner {
+    left: auto;
+    transform: none;
+    margin: 0;
+  }
+
+  /* Ensure the constrained slab applies on desktop as well */
+  .content-align-outer {
+    width: 100%;
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: 0 16px;
+    box-sizing: border-box;
   }
 }
 
