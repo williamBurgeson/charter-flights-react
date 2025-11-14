@@ -38,18 +38,23 @@ function App() {
       <LeftDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
   <header className="app-header" style={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}>
-        {/* show hamburger on mobile only */}
+       <div className="header-spacer header-spacer-left" />
+       <div className="content-align-outer">
+       {/* show hamburger on mobile only */}
         {!isDesktop && (
           <IconButton
             aria-label="open menu"
             onClick={() => setDrawerOpen(true)}
             sx={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', zIndex: theme.zIndex.drawer + 1 }}
-            color="inherit"
+             color="inherit"
           >
             <MenuIcon />
           </IconButton>
         )}
-        <div className="header-inner">Global Connections</div>
+
+          <div className="header-inner">Global Connections</div>
+        </div>
+       <div className="header-spacer header-spacer-right" />
       </header>
 
       <main className="content">

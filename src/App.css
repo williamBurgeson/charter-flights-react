@@ -23,6 +23,13 @@ header {
   position: relative;
 }
 
+/* aligns with the body (unlike the header) */
+.content-align-outer {
+  display: flex;
+  justify-content: center;
+  width: 800px;
+}
+
 /* app-header grid: on desktop the header is split into [drawer][content] so
    the header title can be centered relative to the content column */
 .app-header {
@@ -32,7 +39,7 @@ header {
 
 @media (min-width: 900px) {
   .app-header {
-    display: grid;
+    display: flex;
     grid-template-columns: var(--drawer-width) 1fr;
     align-items: center;
   }
