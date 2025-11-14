@@ -140,8 +140,10 @@ header {
   justify-content: center; /* center inner content (e.g., .table-box) */
 }
 
-/* On mobile, allow the center column to shrink and become fluid */
-@media (max-width: var(--inner-content-standard-width)) {
+/* On mobile, allow the center column to shrink and become fluid.
+   Use an explicit breakpoint (600px) rather than var() because custom
+   properties inside media queries are not reliably supported in all UAs. */
+@media (max-width: 600px) {
   .content-inner {
     flex: 0 1 100%;
     width: 100%;
@@ -178,7 +180,7 @@ header {
   pointer-events: none;
 }
 
-@media (max-width: var(--mobile-breakpoint)) {
+@media (max-width: 900px) {
   .content {
     background-image: url('world-relief-satellite-map-smaller.png');
     background-size: 770px auto;
@@ -192,7 +194,7 @@ header {
   }
 }
 
-@media (prefers-reduced-data: reduce) and (max-width: var(--mobile-breakpoint)) {
+@media (prefers-reduced-data: reduce) and (max-width: 900px) {
   .content {
     background-image: url('world-relief-satellite-map-smallest.png');
     background-size: 770px auto;
