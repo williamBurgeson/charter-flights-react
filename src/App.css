@@ -121,7 +121,11 @@ header {
   /* world relief / satellite map background */
   background-image: url('world-relief-satellite-map.png');
   background-repeat: repeat-y;
-  background-position: center;
+  /* keep the original horizontal offset but pin vertical origin to 0 */
+  background-position: calc(50% + var(--x-offset, 0px)) 0px;
+  background-attachment: fixed;
+  /* anchor the background to the viewport top so the map repeats from top:0
+     rather than being centered inside the .content box (which sits below the header). */
   background-size: auto 800px;
   min-height: 100vh;
   overflow-x: hidden;
