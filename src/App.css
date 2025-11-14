@@ -27,8 +27,8 @@ header {
 .content-align-outer {
   width: 100%;
   max-width: var(--content-max);
-  margin: 0 auto;           /* center the constrained slab */
-  padding: 0 16px;         /* small horizontal gutter */
+  margin: 0;           /* center the constrained slab */
+  padding: 0;         /* small horizontal gutter */
   box-sizing: border-box;
 }
 
@@ -72,18 +72,18 @@ header {
     width: 100%;
     max-width: var(--content-max);
     margin: 0 auto;
-    padding: 0 16px;
+    padding: 0;
     box-sizing: border-box;
   }
 }
-
+/* 
 .header-spacer,
 .content-spacer {
-  /* flexible gutters: 1 (grow) */
+  /* flexible gutters: 1 (grow) * /
   flex: 1 1 0;
   width: 0;
   min-width: 0;
-}
+} */
 
 .app-header .content-align-outer {
   /* center slab: middle of 3 — base 800px but allowed to shrink on small screens */
@@ -103,7 +103,7 @@ header {
   display: flex;
   align-items: flex-start;
   width: 100%;
-  padding: 2rem 0; /* vertical spacing, no horizontal margin so it fills viewport */
+  _padding: 2rem 0; /* vertical spacing, no horizontal margin so it fills viewport */
   box-sizing: border-box;
 }
 
@@ -121,8 +121,10 @@ header {
   /* world relief / satellite map background */
   background-image: url('world-relief-satellite-map.png');
   background-repeat: repeat-y;
-  background-position: calc(50% + var(--x-offset)) center;
+  background-position: center;
   background-size: auto 800px;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 .content::before {
@@ -160,7 +162,7 @@ header {
 @media (min-width: 900px) {
   /* Keep content centered at all widths; remove desktop push offsets. */
   .content {
-    margin: 2rem auto; /* keep vertical spacing and center horizontally */
+    margin: 0; /* keep vertical spacing and center horizontally */
   }
   .header-inner, .content-inner {
     left: auto;
