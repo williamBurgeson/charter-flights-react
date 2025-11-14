@@ -10,39 +10,6 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
-
-  background-image: url('world-relief-satellite-map.png');
-  background-repeat: repeat-y;
-  background-position: calc(50% + var(--x-offset)) center;
-  background-size: auto 800px;
 }
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.6);
-  z-index: 0;
-  pointer-events: none;
-}
-
-@media (max-width: 768px) {
-  body {
-    background-image: url('world-relief-satellite-map-smaller.png');
-    background-size: 770px auto;
-  }
-}
-
-@media (prefers-reduced-data: reduce) {
-  body {
-    background-image: url('world-relief-satellite-map-smallest.png');
-    background-size: auto 800px;;
-  }
-}
-
-@media (prefers-reduced-data: reduce) and (max-width: 768px) {
-  body {
-    background-image: url('world-relief-satellite-map-smallest.png');
-    background-size: 770px auto;
-  }
-}
+/* Background image and translucent overlay moved to `main.content` in App.css
+   so header layout and app layout can be controlled by App-level styles. */

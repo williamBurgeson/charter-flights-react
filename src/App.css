@@ -45,21 +45,18 @@ header {
 /* app-header grid: on desktop the header is split into [drawer][content] so
    the header title can be centered relative to the content column */
 .app-header {
-  /* default styles for mobile: keep the title centered and allow absolute hamburger */
-  display: block;
+  /* three-part flex row: left spacer / center slab / right spacer */
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: var(--z-header, 1100);
 }
 
 @media (min-width: 900px) {
   .app-header {
+    /* keep flex layout on desktop as well */
     display: flex;
-    grid-template-columns: var(--drawer-width) 1fr;
     align-items: center;
-  }
-
-  /* place the visible title into the second (content) column and center it */
-  .app-header .header-inner {
-    grid-column: 2;
-    justify-self: center;
   }
 
   /* Reset old positional centering (we now center via the flex slab).
@@ -80,12 +77,82 @@ header {
   }
 }
 
-.content {
+.header-spacer,
+.content-spacer {
+  /* flexible gutters: 1 (grow) */
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+}
+
+.app-header .content-align-outer {
+  /* center slab: middle of 3 — base 800px but allowed to shrink on small screens */
+  flex: 0 1 800px; /* don't grow, allow shrink, base = 800px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  box-sizing: border-box;
+}
+
+.content-container {
   position: relative;
   z-index: 2;
   display: flex;
-  justify-content: center;
-  margin: 2rem;
+  align-items: flex-start;
+  width: 100%;
+  padding: 2rem 0; /* vertical spacing, no horizontal margin so it fills viewport */
+  box-sizing: border-box;
+}
+
+/* Make the content column the middle of three: left spacer (1) / content (800px) / right spacer (1) */
+
+.content-container .content { width:100%; flex: 1 600px 1; }
+.content-inner { width: 100%; box-sizing: border-box; }
+
+/* Background and translucent overlay previously lived on `body`.
+   They are intentionally moved to the main content slab so the header
+   layout is independent of the app background. The overlay uses a
+   fixed pseudo-element so it covers the viewport but is scoped
+   to the presence of the .content element. */
+.content {
+  /* world relief / satellite map background */
+  background-image: url('world-relief-satellite-map.png');
+  background-repeat: repeat-y;
+  background-position: calc(50% + var(--x-offset)) center;
+  background-size: auto 800px;
+}
+
+.content::before {
+  content: "";
+  position: fixed; /* cover viewport */
+  inset: 0;
+  background: rgba(255, 255, 255, 0.6);
+  z-index: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .content {
+    background-image: url('world-relief-satellite-map-smaller.png');
+    background-size: 770px auto;
+  }
+}
+
+@media (prefers-reduced-data: reduce) {
+  .content {
+    background-image: url('world-relief-satellite-map-smallest.png');
+    background-size: auto 800px;
+  }
+}
+
+@media (prefers-reduced-data: reduce) and (max-width: 768px) {
+  .content {
+    background-image: url('world-relief-satellite-map-smallest.png');
+    background-size: 770px auto;
+  }
 }
 
 /* When the permanent drawer is visible on desktop, push content to the right

@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { to: '/flights', label: 'Flights' },
   { to: '/airports', label: 'Airports' },
   { to: '/settings', label: 'Settings' },
+  { to: '/empty', label: 'Empty' },
 ]
 
 export default function LeftDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
