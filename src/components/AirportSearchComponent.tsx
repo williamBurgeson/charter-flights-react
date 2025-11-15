@@ -1,4 +1,4 @@
-import './airport-search-component.css'
+import './AirportSearchComponent.css'
 
 export default function AirportSearchComponent() {
   return (
