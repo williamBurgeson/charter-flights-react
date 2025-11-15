@@ -2,9 +2,10 @@ import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { GeoPoint } from '../models/geo-types'
+export type MapBoundsPayload = { southWest: GeoPoint; northEast: GeoPoint; center: GeoPoint; zoom: number }
+export type MapBoundsCallback = (b: MapBoundsPayload) => void
 import './MapComponent.css'
 
-type BoundsCallback = (b: { southWest: GeoPoint; northEast: GeoPoint; center: GeoPoint; zoom: number }) => void
 
 export default function LeafletMapHostComponent({
   centerGeoPoint = null,
@@ -13,7 +14,7 @@ export default function LeafletMapHostComponent({
 }: {
   centerGeoPoint?: GeoPoint | null
   zoom?: number | null
-  mapUpdatedEvent?: BoundsCallback
+  mapUpdatedEvent?: MapBoundsCallback
 }) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const boundsRef = useRef<L.LatLngBounds | null>(null)
