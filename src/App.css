@@ -138,6 +138,7 @@ header {
   padding: 16px;
   display: flex;
   justify-content: center; /* center inner content (e.g., .table-box) */
+  align-items: center; /* vertically center loading/content inside the inner slab */
 }
 
 /* On mobile, allow the center column to shrink and become fluid.
