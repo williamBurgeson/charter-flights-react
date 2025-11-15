@@ -2,7 +2,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react'
 import './App.css'
 
 import { LoadingComponent } from './components/LoadingComponent.tsx'
-import LeftDrawer from './components/left-drawer.tsx'
+import LeftNavMenu from './components/LeftNavMenu.tsx'
 import IconButton from '@mui/material/IconButton'
 import MenuIcon from '@mui/icons-material/Menu'
 import { useTheme } from '@mui/material/styles'
@@ -35,7 +35,7 @@ function App() {
   return (
     <>
     <BrowserRouter>
-      <LeftDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+  <LeftNavMenu open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
   <header className="app-header" style={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}>
        <div className="header-spacer header-spacer-left" />
