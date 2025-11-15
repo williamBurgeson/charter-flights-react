@@ -4,6 +4,7 @@ import { useAirports } from "./data/useAirports";
 import { useTerritories } from "./data/useTerritories";
 import type { Airport } from "../models/airport.model";
 import type { Territory } from "../models/territory.model";
+import type { GeoRegion } from "../models/geo-types";
 
 export interface HierarchicalAirportSearchParams {
   airportCodes?: string[];
@@ -32,6 +33,15 @@ function latLonBoundsParamsAreEmpty(params: LatLonBoundsAirportSearchParams): bo
   );
 } 
 
+function convertGeoRegionToLatLonBounds(geoRegion: GeoRegion): LatLonBoundsAirportSearchParams {
+  return {
+    maxLatitude: geoRegion.northEast.lat_decimal,
+    minLatitude: geoRegion.southWest.lat_decimal,
+    maxLongitude: geoRegion.northEast.lon_decimal,
+    minLongitude: geoRegion.southWest.lon_decimal,
+  };
+}
+
 export function useAirportSearch() {
   const { filterByCountryValues: filterAirportsByCountryValues, filterByCodeValues: filterAirportsByCodeValues, getAll: getAllAirports } = useAirports();
   
@@ -56,7 +66,7 @@ export function useAirportSearch() {
       // returned directly by code over those inferred from continent membership, as in the future the data may be
       // enhanced for countries specifically selected rather than all countries in a continent.
       if (params.countryCodes?.length) {
-        
+
         const countriesFromCodes = await filterCountriesByCodeValues(params.countryCodes);
         candidateTerritories = [
           ...countriesFromContinents.filter(

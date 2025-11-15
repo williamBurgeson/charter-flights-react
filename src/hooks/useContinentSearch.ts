@@ -1,5 +1,6 @@
 import { useContinents } from './data/useContinents'
 import type { GeoPoint, GeoRegion } from '../models/geo-types'
+import type { Continent } from '../models/continent.model'
 
 // Pure helper: normalize two corner points into a GeoRegion with
 // southWest (min lat/lon) and northEast (max lat/lon).
@@ -51,6 +52,36 @@ export function splitGeoRegionAtAntimeridian(region: GeoRegion): GeoRegion[] {
   }
 
   return [left, right]
+}
+
+// Check overlap between two non-wrapping GeoRegions (axis-aligned)
+function geoRegionsOverlap(a: GeoRegion, b: GeoRegion): boolean {
+  const south = Math.max(a.southWest.lat_decimal, b.southWest.lat_decimal)
+  const north = Math.min(a.northEast.lat_decimal, b.northEast.lat_decimal)
+  if (south > north) return false
+
+  const west = Math.max(a.southWest.lon_decimal, b.southWest.lon_decimal)
+  const east = Math.min(a.northEast.lon_decimal, b.northEast.lon_decimal)
+  return west <= east
+}
+
+// Return true if the given continent overlaps the provided GeoRegion.
+export function isContinentInRegion(continent: Continent, region: GeoRegion): boolean {
+  // Convert continent bounding box to GeoRegion
+  const contRegion: GeoRegion = {
+    southWest: { lat_decimal: continent.minLat, lon_decimal: continent.minLon },
+    northEast: { lat_decimal: continent.maxLat, lon_decimal: continent.maxLon },
+  }
+
+  const regionPieces = splitGeoRegionAtAntimeridian(region)
+  const contPieces = splitGeoRegionAtAntimeridian(contRegion)
+
+  for (const rp of regionPieces) {
+    for (const cp of contPieces) {
+      if (geoRegionsOverlap(rp, cp)) return true
+    }
+  }
+  return false
 }
 
 export function useContinentSearch() {
