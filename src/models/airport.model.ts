@@ -1,6 +1,6 @@
 import type { EntityWithCode } from './entity-with-code.model';
 import type { EntityWithName } from './entity-with-name.model';
-import type { GeoPoint } from './geopoint.value';
+import type { GeoPoint } from './geo-types';
 import type { RecordEntity } from './record-entity';
 
 export interface Airport extends RecordEntity, EntityWithCode, EntityWithName, GeoPoint {
