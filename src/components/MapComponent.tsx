@@ -5,6 +5,7 @@ import './MapComponent.css'
 
 export default function MapComponent() {
   const mapRef = useRef<HTMLDivElement | null>(null)
+  const boundsRef = useRef<L.LatLngBounds | null>(null)
   useEffect(() => {
     if (!mapRef.current) return
 
@@ -12,7 +13,15 @@ export default function MapComponent() {
     // DOM node (for example due to StrictMode double-mounts or an unexpected
     // remount), avoid creating a second map. We store the map instance on the
     // DOM node so we can detect and clean it up reliably.
-    const host = mapRef.current as unknown as { __leafletMap?: L.Map }
+    const host = mapRef.current as unknown as {
+      __leafletMap?: L.Map
+      __leafletMapBounds?: {
+        southWest: L.LatLng
+        northEast: L.LatLng
+        center: L.LatLng
+        zoom: number
+      }
+    }
     if (host.__leafletMap) {
       // already initialized
       console.debug('MapComponent: existing leaflet map found on host — skipping init')
@@ -37,14 +46,44 @@ export default function MapComponent() {
     // attach instance for later detection/cleanup
     host.__leafletMap = map
 
+    // initialize bounds and attach to host for easy debugging from devtools
+    const updateBounds = () => {
+      try {
+        const b = map.getBounds()
+        boundsRef.current = b
+        // store a simple serializable bounds object on the host DOM node
+        host.__leafletMapBounds = {
+          southWest: b.getSouthWest(),
+          northEast: b.getNorthEast(),
+          center: map.getCenter(),
+          zoom: map.getZoom(),
+        }
+        // Helpful debug output
+        console.debug('MapComponent: bounds updated', host.__leafletMapBounds)
+      } catch (e) {
+        console.debug('MapComponent: failed to read bounds', e)
+      }
+    }
+
+    // run once to capture initial bounds
+    updateBounds()
+
+    // update bounds whenever the map finishes moving/zooming
+    map.on('moveend', updateBounds)
+
     return () => {
       try {
         console.debug('MapComponent: removing leaflet map')
+        // remove listener first
+        map.off('moveend', updateBounds)
         map.remove()
       } finally {
         // clear the marker on the DOM node so a future mount can recreate
         // the map cleanly
-        if (host) delete host.__leafletMap
+        if (host) {
+          delete host.__leafletMap
+          delete host.__leafletMapBounds
+        }
       }
     }
   }, [])
