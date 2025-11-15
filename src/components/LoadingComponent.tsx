@@ -1,4 +1,4 @@
-import AnimatedEllipsis from './animated-ellipsis'
+import AnimatedEllipsis from './AnimatedEllipsis'
 import './LoadingComponent.css'
 
 export function LoadingComponent() {
