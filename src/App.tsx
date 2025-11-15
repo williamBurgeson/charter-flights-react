@@ -11,7 +11,7 @@ import { BrowserRouter } from 'react-router-dom'
 
 import useFlightSeeder from './hooks/useFlightSeeder.ts'
 import { makeSuspenseResource, type SuspenseResource } from './utils/suspense-resource.ts'
-import AppRouter from './components/app-router.tsx'
+import AppRouter from './components/AppRouter.tsx'
 
 function App() {
 

@@ -7,16 +7,16 @@ import type { SuspenseResource } from '../utils/suspense-resource'
 import { EmptyPage } from '../pages/EmptyPage'
 
 export default function AppRouter({ suspenseResource }: { suspenseResource: SuspenseResource }) {
-	// suspend the router until seeding completes
-	suspenseResource.read()
+  // suspend the router until seeding completes
+  suspenseResource.read()
 
-	return (
-		<Routes>
-			<Route index element={<HomePage />} />
+  return (
+    <Routes>
+      <Route index element={<HomePage />} />
       <Route path="/map" element={<MapPage />} />
       <Route path="/airports" element={<AirportSearchPage />} />
-			<Route path="*" element={<NotFoundPage />} />
+      <Route path="*" element={<NotFoundPage />} />
       <Route path="/empty" element={<EmptyPage />} />
-		</Routes>
-	)
+    </Routes>
+  )
 }
