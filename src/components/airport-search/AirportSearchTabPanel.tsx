@@ -14,23 +14,23 @@ export default function AirportSearchTabPanel() {
     <div className="airport-search-tab-panel">
       <Box>
         <Tabs value={value} onChange={(_, v) => setValue(v)} aria-label="example tabs" variant="scrollable" scrollButtons="auto">
-          <Tab label="First" />
-          <Tab label="Second" />
-          <Tab label="Third" />
+          <Tab label="by Map" />
+          <Tab label="By Territories" />
+          <Tab label="From Point" />
         </Tabs>
 
         <TabPanel value={value} index={0}>
-          <div className="airport-search-tab-panel-first">
+          <div className="airport-search-tab-panel-by-maps">
             First content
           </div>
         </TabPanel>
         <TabPanel value={value} index={1}>
-          <div className="airport-search-tab-panel-second">
+          <div className="airport-search-tab-panel-by-territories">
             Second content
           </div>
         </TabPanel>
         <TabPanel value={value} index={2}>
-          <div className="airport-search-tab-panel-third">
+          <div className="airport-search-tab-panel-from-point">
             Third content
           </div>
         </TabPanel>

@@ -5,14 +5,45 @@
   border-radius: 6px;
 }
 
+.airport-search-tab-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.airport-search-tab-panel > .MuiBox-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .airport-search-tab-panel-first,
 .airport-search-tab-panel-second,
 .airport-search-tab-panel-third {
   padding: 12px;
   background: rgba(0,0,0,0.02);
   border-radius: 4px;
+  /* make content areas share remaining space */
+  flex: 1 1 0;
+  overflow: auto;
 }
 
 .airport-search-tab-panel h3 {
   margin: 0 0 8px 0;
 }
+
+/* Make tabs take only their natural height but distribute tab items equally */
+.airport-search-tab-panel .MuiTabs-root {
+  /* ensure tabs don't collapse when container is flexible */
+  flex: 0 0 auto;
+}
+
+/* Make each Tab take equal width so tabs are positioned uniformly */
+.airport-search-tab-panel .MuiTabs-flexContainer .MuiTab-root {
+  flex: 1 1 0;
+  max-width: none;
+}
+
+.airport-search-tab-panel MuiBox-root {
+  display: flex;
+} 
