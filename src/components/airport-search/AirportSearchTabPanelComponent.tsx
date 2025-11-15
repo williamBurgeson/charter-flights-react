@@ -2,16 +2,16 @@ import { useState } from 'react'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
 import Box from '@mui/material/Box'
-import './airport-search-tab-panel.css'
+import './AirportSearchTabPanelComponent.css'
 
 function TabPanel({ children, value, index }: { children?: React.ReactNode; value: number; index: number }) {
   return value === index ? <Box sx={{ p: 2 }}>{children}</Box> : null
 }
 
-export default function AirportSearchTabPanel() {
+export default function AirportSearchTabPanelComponent() {
   const [value, setValue] = useState(0)
   return (
-    <div className="airport-search-tab-panel">
+    <div className="airport-search-tab-panel-component">
       <Box>
         <Tabs value={value} onChange={(_, v) => setValue(v)} aria-label="example tabs" variant="scrollable" scrollButtons="auto">
           <Tab label="by Map" />
