@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import './App.css'
 
-import { LoadingComponent } from './components/loading-component.tsx'
+import { LoadingComponent } from './components/LoadingComponent.tsx'
 import LeftDrawer from './components/left-drawer.tsx'
 import IconButton from '@mui/material/IconButton'
 import MenuIcon from '@mui/icons-material/Menu'
