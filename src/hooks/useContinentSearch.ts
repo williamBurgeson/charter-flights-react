@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { useContinents } from './data/useContinents'
 import type { GeoPoint, GeoRegion } from '../models/geo-types'
 import type { Continent } from '../models/continent.model'
@@ -85,5 +86,14 @@ export function isContinentInRegion(continent: Continent, region: GeoRegion): bo
 }
 
 export function useContinentSearch() {
-  return useContinents()
+  const { getAll } = useContinents()
+
+  const findContinentsIntersectingRegion = useCallback(async (region: GeoRegion) => {
+    const all = await getAll()
+    return all.filter((c: Continent) => isContinentInRegion(c, region))
+  }, [getAll])
+
+  return {
+    findContinentsIntersectingRegion,
+  }
 }
