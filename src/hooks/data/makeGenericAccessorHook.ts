@@ -50,10 +50,32 @@ export function makeGenericAccessorHook<
       return data
     }, [fetchData])
 
+    // Generic matcher that supports scalar or array-valued entity fields and
+    // scalar or array test values. Examples:
+    // - fieldVal = 'US', testVal = 'US' -> true
+    // - fieldVal = ['NA','SA'], testVal = 'NA' -> true
+    // - fieldVal = ['NA','SA'], testVal = ['AF','NA'] -> true (any overlap)
+    // - fieldVal = 'US', testVal = ['US','GB'] -> true
+    const matchesValue = (fieldVal: unknown, testVal: unknown | unknown[]) => {
+      if (Array.isArray(fieldVal)) {
+        const fv = fieldVal as unknown[]
+        if (Array.isArray(testVal)) {
+          return (testVal as unknown[]).some((v) => fv.includes(v))
+        }
+        return fv.includes(testVal)
+      }
+
+      // field is scalar
+      if (Array.isArray(testVal)) {
+        return (testVal as unknown[]).includes(fieldVal)
+      }
+      return fieldVal === testVal
+    }
+
     const filterByField = useCallback(
       async <K extends keyof T>(key: K, values: T[K][]) => {
         const list = await getAll()
-        return list.filter((item) => values.includes(item[key]))
+        return list.filter((item) => matchesValue(item[key], values))
       },
       [getAll]
     )
@@ -73,13 +95,13 @@ export function makeGenericAccessorHook<
         const name = `getBy${cap(String(k))}`
         uniqueGetters[name] = async (value: unknown) => {
           const list = await getAll()
-          return (list.find((d) => d[k] === value) ?? null) as T | null
+          return (list.find((d) => matchesValue(d[k], value)) ?? null) as T | null
         }
 
         const nameValues = `getBy${cap(String(k))}Values`
         uniqueValueGetters[nameValues] = async (values: unknown[]) => {
           const list = await getAll()
-          return list.filter((d) => values.includes(d[k]))
+          return list.filter((d) => matchesValue(d[k], values))
         }
       })
 
@@ -87,13 +109,13 @@ export function makeGenericAccessorHook<
         const name = `filterBy${cap(String(k))}`
         nonUniqueFilters[name] = async (value: unknown) => {
           const list = await getAll()
-          return list.filter((d) => d[k] === value)
+          return list.filter((d) => matchesValue(d[k], value))
         }
 
         const nameValues = `filterBy${cap(String(k))}Values`
         nonUniqueFilters[nameValues] = async (values: unknown[]) => {
           const list = await getAll()
-          return list.filter((d) => values.includes(d[k]))
+          return list.filter((d) => matchesValue(d[k], values))
         }
       })
 

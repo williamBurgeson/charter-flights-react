@@ -12,13 +12,13 @@ import useMediaQuery from '@mui/material/useMediaQuery'
 const NAV_ITEMS = [
   { to: '/', label: 'Home' },
   { to: '/map', label: 'Map' },
-  { to: '/flights', label: 'Flights' },
   { to: '/airports', label: 'Airports' },
+  { to: '/flights', label: 'Flights' },
   { to: '/settings', label: 'Settings' },
   { to: '/empty', label: 'Empty' },
 ]
 
-export default function LeftDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+export default function LeftNavMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const drawerWidth = 260
   const theme = useTheme()
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'))
@@ -32,17 +32,18 @@ export default function LeftDrawer({ open, onClose }: { open: boolean; onClose: 
       onClose={onClose}
       ModalProps={isDesktop ? undefined : { keepMounted: true }}
       sx={{
-        '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' },
+        // Prevent horizontal scrollbar by hiding x-overflow on the drawer paper.
+        '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box', overflowX: 'hidden' },
       }}
     >
       <Box sx={{ width: drawerWidth }} role="presentation">
-        <Box sx={{ p: 2, fontWeight: 'bold' }}>App Menu</Box>
+        <Box sx={{ p: 2, fontWeight: 'bold', overflowX: 'hidden' }}>App Menu</Box>
         <Divider />
         <List>
           {NAV_ITEMS.map((it) => (
             <ListItem key={it.to} disablePadding>
               <ListItemButton component={RouterLink} to={it.to} onClick={onClose}>
-                <ListItemText primary={it.label} />
+                <ListItemText primary={it.label} primaryTypographyProps={{ noWrap: true }} />
               </ListItemButton>
             </ListItem>
           ))}

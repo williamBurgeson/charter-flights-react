@@ -1,8 +1,8 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import './App.css'
 
-import { LoadingComponent } from './components/loading-component.tsx'
-import LeftDrawer from './components/left-drawer.tsx'
+import { LoadingComponent } from './components/LoadingComponent.tsx'
+import LeftNavMenu from './components/LeftNavMenu.tsx'
 import IconButton from '@mui/material/IconButton'
 import MenuIcon from '@mui/icons-material/Menu'
 import { useTheme } from '@mui/material/styles'
@@ -11,7 +11,7 @@ import { BrowserRouter } from 'react-router-dom'
 
 import useFlightSeeder from './hooks/useFlightSeeder.ts'
 import { makeSuspenseResource, type SuspenseResource } from './utils/suspense-resource.ts'
-import AppRouter from './components/app-router.tsx'
+import AppRouter from './components/AppRouter.tsx'
 
 function App() {
 
@@ -35,7 +35,7 @@ function App() {
   return (
     <>
     <BrowserRouter>
-      <LeftDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+  <LeftNavMenu open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
   <header className="app-header" style={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}>
        <div className="header-spacer header-spacer-left" />

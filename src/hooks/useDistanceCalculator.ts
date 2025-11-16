@@ -3,7 +3,7 @@ import { useAirports } from "./data/useAirports";
 import { useTerritories } from "./data/useTerritories";
 import type { Airport } from "../models/airport.model";
 import type { ContinentCode } from "../models/continent.model";
-import type { GeoPoint } from "../models/geopoint.value";
+import type { GeoPoint } from "../models/geo-types";
 import type { AirportSearchParams } from "./useAirportSearch";
 
 // --- Types ---
