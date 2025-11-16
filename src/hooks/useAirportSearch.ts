@@ -45,7 +45,7 @@ function convertGeoRegionToLatLonBounds(geoRegion: GeoRegion): LatLonBoundsAirpo
 export function useAirportSearch() {
   const { filterByCountryValues: filterAirportsByCountryValues, filterByCodeValues: filterAirportsByCodeValues, getAll: getAllAirports } = useAirports();
   
-  const { filterByContinentCodeValues : filterCountriesByContinentCodeValues, filterByCodeValues: filterCountriesByCodeValues } = useTerritories();
+  const { filterByContinentsValues : filterCountriesByContinentsValues, filterByCodeValues: filterCountriesByCodeValues } = useTerritories();
 
   // IMPORTANT: the returned list object is null to allow caller to distinguish "no filtering" from "filtered to empty set"
   const getCandidateCountries = useCallback(async (params : HierarchicalAirportSearchParams): Promise<Territory[] | null> => {
@@ -60,7 +60,7 @@ export function useAirportSearch() {
     // prefer countryCodes over continentCodes in case of overlap (as in the future the the data may be 
     // enhanced for countries specifically selected rather than all countries in a continent)
     if (params.continentCodes?.length) {
-      const countriesFromContinents = await filterCountriesByContinentCodeValues(params.continentCodes);
+      const countriesFromContinents = await filterCountriesByContinentsValues(params.continentCodes);
 
       // If continentCodes and countryCodes are both provided, we need to dedupe by prioritizing country records
       // returned directly by code over those inferred from continent membership, as in the future the data may be
@@ -82,7 +82,7 @@ export function useAirportSearch() {
     }
 
     return candidateTerritories;
-  }, [filterCountriesByContinentCodeValues, filterCountriesByCodeValues]);
+  }, [filterCountriesByContinentsValues, filterCountriesByCodeValues]);
 
   // IMPORTANT: the returned list object is null to allow caller to distinguish "no filtering" from "filtered to empty set"
   const filterAirportsByHierarchicalParams = useCallback(async (params: HierarchicalAirportSearchParams, candidateAirports: Airport[] | null = null) => {

@@ -15,7 +15,7 @@
     "@mui/icons-material": "^7.3.5",
     "@mui/material": "^7.3.5",
     "leaflet": "^1.9.4",
-  "leaflet.markercluster": "^1.5.3",
+    "leaflet.markercluster": "^1.5.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^6.30.1"
