@@ -28,6 +28,37 @@ export default function LeafletMapHostComponent({
   const mapRef = useRef<HTMLDivElement | null>(null)
   const boundsRef = useRef<L.LatLngBounds | null>(null)
   const markersLayerRef = useRef<L.LayerGroup | null>(null)
+  const markersRef = useRef<MarkerData[] | undefined>(undefined)
+  markersRef.current = markers
+
+  // Helper to (re)render markers onto the map. Extracted so we can call it
+  // both after map initialization and when the `markers` prop changes.
+  const renderMarkers = (map: L.Map, markers?: MarkerData[]) => {
+    if (!map) return
+
+    // Ensure we have a layer group to manage markers
+    if (!markersLayerRef.current) {
+      markersLayerRef.current = L.layerGroup()
+      markersLayerRef.current.addTo(map)
+    }
+
+    const layer = markersLayerRef.current!
+    // Clear existing markers
+    layer.clearLayers()
+
+    if (markers && markers.length) {
+      console.log('LeafletMapHostComponent: rendering markers count', markers.length)
+      const created: L.Marker[] = (markers as MarkerData[]).map((m) => {
+        const mk = L.marker([m.lat, m.lon])
+        if (m.popupHtml) mk.bindPopup(m.popupHtml)
+        if (m.title) mk.bindTooltip(m.title)
+        return mk
+      })
+      layer.addLayer(L.layerGroup(created))
+    } else {
+      console.log('LeafletMapHostComponent: no markers to render')
+    }
+  }
 
   useEffect(() => {
     if (!mapRef.current) return
@@ -53,6 +84,13 @@ export default function LeafletMapHostComponent({
     }).addTo(map)
 
     host.__leafletMap = map
+
+    // If markers were provided before the map initialized, render them now using the ref
+    try {
+      renderMarkers(map, markersRef.current)
+    } catch {
+      // swallow - rendering markers is best-effort
+    }
 
     const updateBounds = () => {
       try {
@@ -91,33 +129,11 @@ export default function LeafletMapHostComponent({
   // Update markers when the markers prop changes
   useEffect(() => {
     if (!mapRef.current) return
-    type Host = { __leafletMap?: L.Map }
-    const host = mapRef.current as unknown as Host
+    const host = mapRef.current as unknown as { __leafletMap?: L.Map }
     const map = host.__leafletMap
     if (!map) return
 
-    // Ensure we have a layer group to manage markers
-    if (!markersLayerRef.current) {
-      markersLayerRef.current = L.layerGroup()
-      markersLayerRef.current.addTo(map)
-    }
-
-    const layer = markersLayerRef.current
-    // Clear existing markers
-    layer.clearLayers()
-
-    if (markers && markers.length) {
-      console.log('LeafletMapHostComponent: rendering markers count', markers.length)
-      const created: L.Marker[] = (markers as MarkerData[]).map((m) => {
-        const mk = L.marker([m.lat, m.lon])
-        if (m.popupHtml) mk.bindPopup(m.popupHtml)
-        if (m.title) mk.bindTooltip(m.title)
-        return mk
-      })
-      layer.addLayer(L.layerGroup(created))
-    } else {
-      console.log('LeafletMapHostComponent: no markers to render')
-    }
+    renderMarkers(map, markers)
 
     return () => {
       // we keep layer for reuse; it will be cleared on next update

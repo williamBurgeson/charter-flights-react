@@ -3,6 +3,7 @@ import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
 import Box from '@mui/material/Box'
 import './AirportSearchTabPanelComponent.css'
+import MapComponent from '../MapComponent'
 
 function TabPanel({ children, value, index }: { children?: React.ReactNode; value: number; index: number }) {
   return value === index ? <Box sx={{ p: 2 }}>{children}</Box> : null
@@ -21,7 +22,7 @@ export default function AirportSearchTabPanelComponent() {
 
         <TabPanel value={value} index={0}>
           <div className="airport-search-tab-panel-by-maps">
-            First content
+            <MapComponent />
           </div>
         </TabPanel>
         <TabPanel value={value} index={1}>
