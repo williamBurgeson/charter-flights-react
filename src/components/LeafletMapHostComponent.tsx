@@ -1,17 +1,11 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-// Ensure default Leaflet marker icons are set when bundlers don't copy image assets
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-})
+
 import type { GeoPoint } from '../models/geo-types'
 type MarkerData = { id: string; lat: number; lon: number; title?: string; popupHtml?: string }
 export type MapBoundsPayload = { southWest: GeoPoint; northEast: GeoPoint; center: GeoPoint; zoom: number }
 export type MapBoundsCallback = (b: MapBoundsPayload) => void
-import './MapComponent.css'
 
 
 export default function LeafletMapHostComponent({
@@ -49,11 +43,10 @@ export default function LeafletMapHostComponent({
 
     if (markers && markers.length) {
       console.log('LeafletMapHostComponent: rendering markers count', markers.length)
-      // Use an HTML-based DivIcon marker so we don't rely on SVG/Canvas renderers or external images
+      // I'm sure this can be done more succinctly but time marches on...
       const created: L.Marker[] = (markers as MarkerData[]).map((m) => {
-        const iconHtml = `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#d00;box-shadow:0 0 6px rgba(255,85,85,0.9);"></span>`
-        const icon = L.divIcon({ html: iconHtml, className: 'leaflet-custom-divicon', iconSize: [12, 12] })
-        const mk = L.marker([m.lat, m.lon], { icon })
+
+        const mk = L.marker([m.lat, m.lon], { icon: new L.Icon.Default() })
         if (m.popupHtml) mk.bindPopup(m.popupHtml)
         if (m.title) mk.bindTooltip(m.title)
         return mk
