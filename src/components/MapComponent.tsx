@@ -5,6 +5,7 @@ import { useContinentSearch } from '../hooks/useContinentSearch'
 import type { Continent } from '../models/continent.model'
 import type { GeoRegion } from '../models/geo-types'
 import { useAirportSearch } from '../hooks/useAirportSearch'
+import { useAirports } from '../hooks/data/useAirports'
 import type { Airport } from '../models/airport.model'
 import type { AirportSearchParams } from '../hooks/useAirportSearch'
 import type { ContinentCode } from '../models/continent.model'
@@ -17,9 +18,15 @@ export default function MapComponent() {
   const centerRef = useRef<{ lat_decimal: number; lon_decimal: number } | null>(null)
   const { searchAirports } = useAirportSearch()
 
-  // Track last selection using a ref to avoid re-renders and potential
-  // dependency cycles. This is an optimization, not application state.
-  const lastSelectedAirportRef = useRef<Airport | null>(null)
+  // Track last selection as React state — this is core behavior of the
+  // MapComponent and consumers may rely on it. Using state makes the
+  // selection explicit and observable.
+  const [lastSelectedAirport, setLastSelectedAirport] = useState<Airport | null>(null)
+  // Simple in-memory cache for airport lookups by id (code). This avoids
+  // repeated fetches to the accessor and keeps the selected-airport lookup
+  // fast.
+  const airportCacheRef = useRef<Map<string, Airport | null>>(new Map())
+  const { getByCode: getAirportByCode } = useAirports()
 
   const handleMapUpdated = useCallback(async (b: MapBoundsPayload) => {
     console.log('MapComponent: bounds changed', b)
@@ -27,6 +34,19 @@ export default function MapComponent() {
     try {
       const list = await findContinentsIntersectingRegion(region)
       setContinentsInView(list)
+      // Clear selection when the map view changes — but only if the
+      // previously-selected airport is no longer visible. If the user pans
+      // slightly such that the airport remains in view, keep the selection.
+      try {
+        const prev = lastSelectedAirport
+        if (prev) {
+          const inBounds = isInBounds({ southWest: b.southWest, northEast: b.northEast }, prev.lat_decimal, prev.lon_decimal)
+          if (!inBounds) setLastSelectedAirport(null)
+        }
+      } catch {
+        // ignore any unexpected shape errors and clear selection to be safe
+        setLastSelectedAirport(null)
+      }
       console.log('MapComponent: continents in view', list)
 
       // Store center for caller debugging / current position usage
@@ -51,35 +71,62 @@ export default function MapComponent() {
     } catch (e) {
       console.error('MapComponent: failed to get continents for bounds', e)
     }
-  }, [findContinentsIntersectingRegion, searchAirports])
+  }, [findContinentsIntersectingRegion, searchAirports, lastSelectedAirport])
 
   // Convert domain airports -> marker data for the Leaflet host
   const markers = useMemo(() => {
     return airportsInView.map(a => ({ id: a.code, lat: a.lat_decimal, lon: a.lon_decimal, title: a.name, popupHtml: `<strong>${a.name}</strong><br/>${a.code}` }))
   }, [airportsInView])
 
+  // Helper to determine whether a lat/lon lies within a GeoRegion. Handles
+  // the antimeridian case where southWest.lon > northEast.lon.
+  const isInBounds = (region: GeoRegion, lat: number, lon: number) => {
+    const sw = region.southWest
+    const ne = region.northEast
+    const latIn = lat >= sw.lat_decimal && lat <= ne.lat_decimal
+    let lonIn = false
+    if (sw.lon_decimal <= ne.lon_decimal) {
+      // normal case
+      lonIn = lon >= sw.lon_decimal && lon <= ne.lon_decimal
+    } else {
+      // bounds cross the antimeridian (e.g., sw.lon=170, ne.lon=-170)
+      lonIn = lon >= sw.lon_decimal || lon <= ne.lon_decimal
+    }
+    return latIn && lonIn
+  }
+
   // Prefer keeping control flow out of the state setter. Use a ref for the
   // comparison (fast, synchronous) then update state for UI. This keeps the
   // decision logic testable and separate from state application.
-  const handleMarkerSelect = useCallback((p: MarkerSelectPayload) => {
+  const handleMarkerSelect = useCallback(async (p: MarkerSelectPayload) => {
     try {
-      // Synchronous check against ref to avoid stale-closure pitfalls
-      if (lastSelectedAirportRef.current && lastSelectedAirportRef.current.code === p.id) {
+      // Synchronous check against state to avoid stale-closure pitfalls
+      if (lastSelectedAirport && lastSelectedAirport.code === p.id) {
         console.log('MapComponent: marker select ignored (same as last)', p.id)
         return
       }
 
-      const found = airportsInView.find(a => a.code === p.id) || null
-      // Update ref immediately for future comparisons. We don't set React
-      // state here because selection is an optimization and shouldn't drive
-      // re-renders by default.
-      lastSelectedAirportRef.current = found
+      // Check local cache first
+      let found = airportCacheRef.current.get(p.id)
+      if (found === undefined) {
+        // Not cached — fetch from accessor (may hit the JSON backend once)
+        try {
+          found = await getAirportByCode(p.id)
+        } catch (fetchErr) {
+          console.warn('MapComponent: getAirportByCode failed for', p.id, fetchErr)
+          found = null
+        }
+        airportCacheRef.current.set(p.id, found)
+      }
+
+      // Update state so consumers can respond to the selection
+      setLastSelectedAirport(found)
       console.log('MapComponent: marker selected', p.id, found)
       // TODO: trigger any further actions (detail panel, fetch extra data, etc.)
     } catch (e) {
       console.error('MapComponent: error handling marker select', e)
     }
-  }, [airportsInView])
+  }, [getAirportByCode, lastSelectedAirport])
 
   return (
     <div className="map-component">

@@ -13,9 +13,7 @@ import 'leaflet/dist/leaflet.css'
 // })
 
 // MarkerCluster plugin + styles (import after Leaflet)
-// @ts-expect-error MarkerCluster CSS has no type declarations
 import 'leaflet.markercluster/dist/MarkerCluster.css'
-// @ts-expect-error MarkerCluster CSS has no type declarations
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import 'leaflet.markercluster'
 
