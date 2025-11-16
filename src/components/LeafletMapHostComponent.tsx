@@ -44,20 +44,110 @@ export default function LeafletMapHostComponent({
 
     const layer = markersLayerRef.current!
     // Clear existing markers
+    console.log('LeafletMapHostComponent: renderMarkers start; incoming markers length', markers?.length ?? 0)
     layer.clearLayers()
 
     if (markers && markers.length) {
       console.log('LeafletMapHostComponent: rendering markers count', markers.length)
+      // Use an HTML-based DivIcon marker so we don't rely on SVG/Canvas renderers or external images
       const created: L.Marker[] = (markers as MarkerData[]).map((m) => {
-        const mk = L.marker([m.lat, m.lon])
+        const iconHtml = `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#d00;box-shadow:0 0 6px rgba(255,85,85,0.9);"></span>`
+        const icon = L.divIcon({ html: iconHtml, className: 'leaflet-custom-divicon', iconSize: [12, 12] })
+        const mk = L.marker([m.lat, m.lon], { icon })
         if (m.popupHtml) mk.bindPopup(m.popupHtml)
         if (m.title) mk.bindTooltip(m.title)
         return mk
       })
-      layer.addLayer(L.layerGroup(created))
+      const subgroup = L.layerGroup(created as unknown as L.Layer[])
+      layer.addLayer(subgroup)
+
+      // If markers did not get attached to the map for some reason, force add them and log state
+      try {
+        created.forEach((cm, idx) => {
+          try {
+            const mAny = cm as unknown as { _map?: L.Map; _icon?: HTMLElement; addTo?: (m: L.Map) => L.Marker }
+            console.log(`LeafletMapHostComponent: marker[${idx}] pre-attach _map`, !!mAny._map, ' _icon', !!mAny._icon)
+            if (!mAny._map) {
+              try {
+                if (typeof mAny.addTo === 'function') {
+                  mAny.addTo(map)
+                  console.log(`LeafletMapHostComponent: marker[${idx}] forced addTo(map)`)
+                }
+              } catch (fae) {
+                console.log(`LeafletMapHostComponent: forced addTo failed for marker[${idx}]`, fae)
+              }
+            }
+            console.log(`LeafletMapHostComponent: marker[${idx}] post-attach _map`, !!mAny._map, ' _icon', !!mAny._icon)
+          } catch (inner) {
+            console.log('LeafletMapHostComponent: per-marker attach check failed', inner)
+          }
+        })
+      } catch {
+        // swallow
+      }
+
+      // Diagnostics: log that layers were added and pane child counts
+      try {
+        const layersNow = markersLayerRef.current?.getLayers().length ?? 0
+        console.log('LeafletMapHostComponent: markersLayer now has layers count', layersNow)
+        const overlayPane = map.getPanes().overlayPane
+        const markerPane = map.getPanes().markerPane
+        console.log('LeafletMapHostComponent: overlayPane childElementCount', overlayPane?.childElementCount)
+        console.log('LeafletMapHostComponent: markerPane childElementCount', markerPane?.childElementCount)
+        // Log first few created marker internal details
+        created.slice(0, 10).forEach((cm, idx) => {
+          try {
+            const rendererName = ((cm as unknown) as { _renderer?: { constructor?: { name?: string } } })._renderer?.constructor?.name ?? 'unknown'
+            console.log(`LeafletMapHostComponent: marker[${idx}] lat/lng`, cm.getLatLng(), 'renderer', rendererName)
+            // Log when marker DOM icon is attached
+            try {
+              ;(cm as unknown as L.Marker).on('add', () => {
+                try {
+                  const iconEl = ((cm as unknown) as { _icon?: HTMLElement })._icon
+                  console.log(`LeafletMapHostComponent: marker[${idx}] added; _icon:`, iconEl, 'inDOM', iconEl ? document.body.contains(iconEl) : false)
+                  if (iconEl) {
+                    const cs = getComputedStyle(iconEl)
+                    console.log(`LeafletMapHostComponent: marker[${idx}] icon computed style`, { display: cs.display, visibility: cs.visibility, opacity: cs.opacity })
+                  }
+                } catch (ie) {
+                  console.log('LeafletMapHostComponent: marker add diagnostic failed', ie)
+                }
+              })
+            } catch (evtErr) {
+              console.log('LeafletMapHostComponent: marker on add attach failed', evtErr)
+            }
+            // Also schedule a short deferred check after DOM updates
+            setTimeout(() => {
+              try {
+                const iconEl = ((cm as unknown) as { _icon?: HTMLElement })._icon
+                console.log(`LeafletMapHostComponent: marker[${idx}] delayed check _icon`, iconEl, 'inDOM', iconEl ? document.body.contains(iconEl) : false)
+                if (iconEl) {
+                  const cs = getComputedStyle(iconEl)
+                  console.log(`LeafletMapHostComponent: marker[${idx}] delayed icon style`, { display: cs.display, visibility: cs.visibility, opacity: cs.opacity })
+                }
+              } catch (dErr) {
+                console.log('LeafletMapHostComponent: delayed marker check failed', dErr)
+              }
+            }, 80)
+          } catch (e) {
+            console.log('LeafletMapHostComponent: marker debug failed', e)
+          }
+        })
+      } catch {
+        // swallow diagnostics failures
+      }
     } else {
       console.log('LeafletMapHostComponent: no markers to render')
     }
+    // Expose the current markers count on the DOM node so we can inspect lifecycle from DevTools
+    try {
+      if (mapRef.current) {
+        (mapRef.current as HTMLElement).dataset.markersCount = String(markers?.length ?? 0)
+      }
+    } catch {
+      // ignore
+    }
+    console.log('LeafletMapHostComponent: renderMarkers end')
   }
 
   useEffect(() => {
