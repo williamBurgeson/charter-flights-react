@@ -4,8 +4,11 @@ import { useSearchParams } from 'react-router-dom'
 export type FlightQuery = {
   origin?: string
   dest?: string
-  depart?: string // ISO date YYYY-MM-DD
-  return?: string // ISO date
+  // support date ranges for departure and return
+  departFrom?: string // ISO date YYYY-MM-DD
+  departTo?: string // ISO date YYYY-MM-DD
+  returnFrom?: string // ISO date YYYY-MM-DD
+  returnTo?: string // ISO date YYYY-MM-DD
   adults?: number
   page?: number
   perPage?: number
@@ -23,8 +26,10 @@ const parseParams = (sp: URLSearchParams): FlightQuery => {
   const q: FlightQuery = {}
   const origin = sp.get('origin')
   const dest = sp.get('dest')
-  const depart = sp.get('depart')
-  const ret = sp.get('return')
+  const departFrom = sp.get('departFrom')
+  const departTo = sp.get('departTo')
+  const returnFrom = sp.get('returnFrom')
+  const returnTo = sp.get('returnTo')
   const adults = toNumber(sp.get('adults') ?? undefined)
   const page = toNumber(sp.get('page') ?? undefined, 1)
   const perPage = toNumber(sp.get('perPage') ?? undefined, 20)
@@ -33,8 +38,10 @@ const parseParams = (sp: URLSearchParams): FlightQuery => {
 
   if (origin) q.origin = origin
   if (dest) q.dest = dest
-  if (depart) q.depart = depart
-  if (ret) q.return = ret
+  if (departFrom) q.departFrom = departFrom
+  if (departTo) q.departTo = departTo
+  if (returnFrom) q.returnFrom = returnFrom
+  if (returnTo) q.returnTo = returnTo
   if (adults !== undefined) q.adults = adults
   if (page !== undefined) q.page = page
   if (perPage !== undefined) q.perPage = perPage
@@ -47,8 +54,10 @@ const serialize = (q: FlightQuery): URLSearchParams => {
   const sp = new URLSearchParams()
   if (q.origin) sp.set('origin', q.origin)
   if (q.dest) sp.set('dest', q.dest)
-  if (q.depart) sp.set('depart', q.depart)
-  if (q.return) sp.set('return', q.return)
+  if (q.departFrom) sp.set('departFrom', q.departFrom)
+  if (q.departTo) sp.set('departTo', q.departTo)
+  if (q.returnFrom) sp.set('returnFrom', q.returnFrom)
+  if (q.returnTo) sp.set('returnTo', q.returnTo)
   if (q.adults !== undefined) sp.set('adults', String(q.adults))
   if (q.page !== undefined) sp.set('page', String(q.page))
   if (q.perPage !== undefined) sp.set('perPage', String(q.perPage))
