@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import type { Flight } from '../../models/flight.model'
 import './FlightSearchResultsComponent.css'
 
@@ -8,6 +9,16 @@ type Props = {
 }
 
 export default function FlightSearchResultsComponent({ flights = [], onSelect, className = '' }: Props) {
+  // Page_Load: run initialization side-effects once on mount
+  function Page_Load() {
+    // small hook point for initialization (analytics, focus, debug)
+    console.debug('FlightSearchResultsComponent Page_Load')
+  }
+
+  useEffect(() => {
+    Page_Load()
+    // run only once on mount
+  }, [])
   if (!flights || flights.length === 0) {
     return <div className={`flight-search-results ${className}`}>No flights</div>
   }
