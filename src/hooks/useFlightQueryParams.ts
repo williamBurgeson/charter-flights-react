@@ -16,6 +16,10 @@ export type FlightQuery = {
   tab?: 'criteria' | 'results'
 }
 
+export type FlightQueryWithSupplied = FlightQuery & {
+  explicitlySuppliedValues: Record<string, string>
+}
+
 const toNumber = (v: string | null | undefined, fallback?: number) => {
   if (!v) return fallback
   const n = Number(v)
@@ -31,8 +35,8 @@ const parseParams = (sp: URLSearchParams): FlightQuery => {
   const returnFrom = sp.get('returnFrom')
   const returnTo = sp.get('returnTo')
   const adults = toNumber(sp.get('adults') ?? undefined)
-  const page = toNumber(sp.get('page') ?? undefined, 1)
-  const perPage = toNumber(sp.get('perPage') ?? undefined, 20)
+  const page = toNumber(sp.get('page') ?? undefined)
+  const perPage = toNumber(sp.get('perPage') ?? undefined)
   const sort = sp.get('sort') ?? undefined
   const tab = (sp.get('tab') as FlightQuery['tab']) ?? undefined
 
@@ -69,7 +73,17 @@ const serialize = (q: FlightQuery): URLSearchParams => {
 export function useFlightQueryParams() {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const query = useMemo(() => parseParams(searchParams), [searchParams])
+  const parsed = useMemo(() => parseParams(searchParams), [searchParams])
+
+  const explicitlySuppliedValues = useMemo(() => {
+    const obj: Record<string, string> = {}
+    for (const [k, v] of Array.from(searchParams.entries())) {
+      obj[k] = v
+    }
+    return obj
+  }, [searchParams])
+
+  const query: FlightQueryWithSupplied = useMemo(() => ({ ...parsed, explicitlySuppliedValues }), [parsed, explicitlySuppliedValues])
 
   /**
    * Update query params by merging partial changes. By default this uses

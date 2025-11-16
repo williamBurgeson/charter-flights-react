@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
+import useFlightQueryParams from '../../hooks/useFlightQueryParams'
 import type { Flight } from '../../models/flight.model'
 import './FlightSearchResultsComponent.css'
 
@@ -9,16 +10,22 @@ type Props = {
 }
 
 export default function FlightSearchResultsComponent({ flights = [], onSelect, className = '' }: Props) {
+  // read the query (includes explicitlySuppliedValues) so we can inspect it
+  const { query } = useFlightQueryParams()
+
   // Page_Load: run initialization side-effects once on mount
-  function Page_Load() {
+  const Page_Load = useCallback(() => {
     // small hook point for initialization (analytics, focus, debug)
-    console.debug('FlightSearchResultsComponent Page_Load')
-  }
+    const snapshot = query
+    const explicit = query.explicitlySuppliedValues
+    console.debug('FlightSearchResultsComponent Page_Load — query snapshot:', snapshot)
+    console.debug('FlightSearchResultsComponent Page_Load — explicitlySuppliedValues:', explicit)
+  }, [query])
 
   useEffect(() => {
     Page_Load()
-    // run only once on mount
-  }, [])
+    // run only once on mount (Page_Load is stable via useCallback)
+  }, [Page_Load])
   if (!flights || flights.length === 0) {
     return <div className={`flight-search-results ${className}`}>No flights</div>
   }
