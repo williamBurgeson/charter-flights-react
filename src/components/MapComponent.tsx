@@ -10,7 +10,12 @@ import type { Airport } from '../models/airport.model'
 import type { AirportSearchParams } from '../hooks/useAirportSearch'
 import type { ContinentCode } from '../models/continent.model'
 
-export default function MapComponent() {
+export type AirportSelectPayload = {
+  airport: Airport | null
+  selectedAt: string // ISO timestamp
+}
+
+export default function MapComponent({ onSelectedAirport }: { onSelectedAirport?: (p: AirportSelectPayload) => void } = {}) {
   const { findContinentsIntersectingRegion } = useContinentSearch()
 
   const [continentsInView, setContinentsInView] = useState<Continent[] | null>(null)
@@ -109,11 +114,12 @@ export default function MapComponent() {
   // decision logic testable and separate from state application.
   const handleMarkerSelect = useCallback(async (p: MarkerSelectPayload) => {
     try {
-      // Synchronous check against ref to avoid stale-closure pitfalls and
-      // prevent recreating this callback when state changes.
+      // Synchronous check against ref to avoid stale-closure pitfalls.
+      // If the same airport is clicked again, do not ignore it — still
+      // notify listeners. We keep the cache lookup to avoid extra work.
       if (lastSelectedAirportRef.current && lastSelectedAirportRef.current.code === p.id) {
-        console.log('MapComponent: marker select ignored (same as last)', p.id)
-        return
+        console.log('MapComponent: marker select (same as last) - will still notify listeners', p.id)
+        // continue — we do not return here so onSelectedAirport is raised
       }
 
       // Check local cache first
@@ -133,42 +139,24 @@ export default function MapComponent() {
       // callbacks can read the latest value synchronously.
       lastSelectedAirportRef.current = found
       setLastSelectedAirport(found)
+      // Notify parent via prop if provided, include timestamp
+      try {
+        if (typeof onSelectedAirport === 'function') {
+          onSelectedAirport({ airport: found, selectedAt: new Date().toISOString() })
+        }
+      } catch (nerr) {
+        console.error('MapComponent: onSelectedAirport handler threw', nerr)
+      }
       console.log('MapComponent: marker selected', p.id, found)
       // TODO: trigger any further actions (detail panel, fetch extra data, etc.)
     } catch (e) {
       console.error('MapComponent: error handling marker select', e)
     }
-  }, [getAirportByCode])
+  }, [getAirportByCode, onSelectedAirport])
 
   return (
     <div className="map-component">
-      <h2>World Map (Leaflet)</h2>
-  <LeafletMapHostComponent mapUpdatedEvent={handleMapUpdated} markers={markers} onMarkerSelect={handleMarkerSelect} />
-      <div className="map-continents-debug" aria-live="polite">
-        {continentsInView && (
-          <div>
-            <strong>Continents in view:</strong> {continentsInView.length}
-            <ul>
-              {continentsInView.map((c) => (
-                <li key={c.code}>{c.name} ({c.code})</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        <div className="map-airports-debug">
-          <strong>Airports in view:</strong> {airportsInView ? airportsInView.length : 0}
-          <div className="map-selected-debug">
-            <strong>Selected airport:</strong> {lastSelectedAirport ? `${lastSelectedAirport.name} (${lastSelectedAirport.code})` : 'none'}
-          </div>
-          {airportsInView && airportsInView.length > 0 && (
-            <ul>
-              {airportsInView.slice(0,10).map(a => (
-                <li key={a.code}>{a.name} ({a.code})</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
+      <LeafletMapHostComponent mapUpdatedEvent={handleMapUpdated} markers={markers} onMarkerSelect={handleMarkerSelect} />
     </div>
   )
 }
