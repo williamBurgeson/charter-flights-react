@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 // Import leaflet's default marker images so the bundler serves/caches them
@@ -44,6 +44,23 @@ export default function LeafletMapHostComponent({
 
   // Helper to (re)render markers onto the map. Extracted so we can call it
   // both after map initialization and when the `markers` prop changes.
+  // Skeleton handler for marker clicks. Logs lat/lon and marker metadata.
+  const onMarkerClick = useCallback((m: MarkerData, marker?: L.Marker) => {
+    try {
+      console.log('LeafletMapHostComponent: marker clicked', {
+        id: m.id,
+        title: m.title,
+        lat: m.lat,
+        lon: m.lon,
+        markerInstance: marker,
+      })
+      // If the MarkerData `id` contains an airport code, this is a good
+      // place to extract and use it. For now we just log it.
+    } catch (e) {
+      console.error('LeafletMapHostComponent: error in onMarkerClick', e)
+    }
+  }, [])
+
   const renderMarkers = (map: L.Map, markers?: MarkerData[]) => {
     if (!map) return
 
@@ -65,6 +82,10 @@ export default function LeafletMapHostComponent({
         const mk = L.marker([m.lat, m.lon], { icon: new L.Icon.Default() })
         if (m.popupHtml) mk.bindPopup(m.popupHtml)
         if (m.title) mk.bindTooltip(m.title)
+        // Attach a simple click handler that logs marker details.
+        // This is a small skeleton; later we can forward events to props
+        // or dispatch to a context/Redux store as needed.
+        mk.on('click', () => onMarkerClick(m, mk))
         clusterGroup.addLayer(mk)
       })
 
