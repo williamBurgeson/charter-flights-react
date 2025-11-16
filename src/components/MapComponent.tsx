@@ -17,7 +17,9 @@ export default function MapComponent() {
   const centerRef = useRef<{ lat_decimal: number; lon_decimal: number } | null>(null)
   const { searchAirports } = useAirportSearch()
 
-  const [lastSelectedAirport, setLastSelectedAirport] = useState<Airport | null>(null)
+  // Track last selection using a ref to avoid re-renders and potential
+  // dependency cycles. This is an optimization, not application state.
+  const lastSelectedAirportRef = useRef<Airport | null>(null)
 
   const handleMapUpdated = useCallback(async (b: MapBoundsPayload) => {
     console.log('MapComponent: bounds changed', b)
@@ -56,22 +58,28 @@ export default function MapComponent() {
     return airportsInView.map(a => ({ id: a.code, lat: a.lat_decimal, lon: a.lon_decimal, title: a.name, popupHtml: `<strong>${a.name}</strong><br/>${a.code}` }))
   }, [airportsInView])
 
+  // Prefer keeping control flow out of the state setter. Use a ref for the
+  // comparison (fast, synchronous) then update state for UI. This keeps the
+  // decision logic testable and separate from state application.
   const handleMarkerSelect = useCallback((p: MarkerSelectPayload) => {
     try {
-      // Prevent repeat handling of the same airport
-      if (lastSelectedAirport && lastSelectedAirport.code === p.id) {
+      // Synchronous check against ref to avoid stale-closure pitfalls
+      if (lastSelectedAirportRef.current && lastSelectedAirportRef.current.code === p.id) {
         console.log('MapComponent: marker select ignored (same as last)', p.id)
         return
       }
 
       const found = airportsInView.find(a => a.code === p.id) || null
-      setLastSelectedAirport(found)
+      // Update ref immediately for future comparisons. We don't set React
+      // state here because selection is an optimization and shouldn't drive
+      // re-renders by default.
+      lastSelectedAirportRef.current = found
       console.log('MapComponent: marker selected', p.id, found)
       // TODO: trigger any further actions (detail panel, fetch extra data, etc.)
     } catch (e) {
       console.error('MapComponent: error handling marker select', e)
     }
-  }, [airportsInView, lastSelectedAirport])
+  }, [airportsInView])
 
   return (
     <div className="map-component">
