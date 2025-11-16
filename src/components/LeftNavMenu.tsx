@@ -14,7 +14,6 @@ const NAV_ITEMS = [
   { to: '/map', label: 'Map' },
   { to: '/airports', label: 'Airports' },
   { to: '/flights', label: 'Flights' },
-  { to: '/airports', label: 'Airports' },
   { to: '/settings', label: 'Settings' },
   { to: '/empty', label: 'Empty' },
 ]

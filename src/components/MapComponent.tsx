@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useMemo } from 'react'
 import LeafletMapHostComponent, { type MapBoundsPayload } from './LeafletMapHostComponent'
 import './MapComponent.css'
 import { useContinentSearch } from '../hooks/useContinentSearch'
@@ -13,17 +13,17 @@ export default function MapComponent() {
   const { findContinentsIntersectingRegion } = useContinentSearch()
 
   const [continentsInView, setContinentsInView] = useState<Continent[] | null>(null)
-  const airportsRef = useRef<Airport[] | null>(null)
+  const [airportsInView, setAirportsInView] = useState<Airport[]>([])
   const centerRef = useRef<{ lat_decimal: number; lon_decimal: number } | null>(null)
   const { searchAirports } = useAirportSearch()
 
   const handleMapUpdated = useCallback(async (b: MapBoundsPayload) => {
-    console.debug('MapComponent: bounds changed', b)
+    console.log('MapComponent: bounds changed', b)
     const region: GeoRegion = { southWest: b.southWest, northEast: b.northEast }
     try {
       const list = await findContinentsIntersectingRegion(region)
       setContinentsInView(list)
-      console.debug('MapComponent: continents in view', list)
+      console.log('MapComponent: continents in view', list)
 
       // Store center for caller debugging / current position usage
       centerRef.current = b.center
@@ -40,19 +40,24 @@ export default function MapComponent() {
         params.continentCodes = list.map(c => c.code as ContinentCode)
       }
 
-      // Execute airport search and stash results locally (no UI rendering required)
+      // Execute airport search and store results in state so the map host can render markers
       const airports = await searchAirports(params)
-      airportsRef.current = airports
-      console.debug('MapComponent: airports found for current view', airports.length)
+      setAirportsInView(airports)
+      console.log('MapComponent: airports found for current view', airports.length)
     } catch (e) {
-      console.debug('MapComponent: failed to get continents for bounds', e)
+      console.error('MapComponent: failed to get continents for bounds', e)
     }
   }, [findContinentsIntersectingRegion, searchAirports])
+
+  // Convert domain airports -> marker data for the Leaflet host
+  const markers = useMemo(() => {
+    return airportsInView.map(a => ({ id: a.code, lat: a.lat_decimal, lon: a.lon_decimal, title: a.name, popupHtml: `<strong>${a.name}</strong><br/>${a.code}` }))
+  }, [airportsInView])
 
   return (
     <div className="map-component">
       <h2>World Map (Leaflet)</h2>
-      <LeafletMapHostComponent mapUpdatedEvent={handleMapUpdated} />
+  <LeafletMapHostComponent mapUpdatedEvent={handleMapUpdated} markers={markers} />
       <div className="map-continents-debug" aria-live="polite">
         {continentsInView && (
           <div>
@@ -64,6 +69,16 @@ export default function MapComponent() {
             </ul>
           </div>
         )}
+        <div className="map-airports-debug">
+          <strong>Airports in view:</strong> {airportsInView ? airportsInView.length : 0}
+          {airportsInView && airportsInView.length > 0 && (
+            <ul>
+              {airportsInView.slice(0,10).map(a => (
+                <li key={a.code}>{a.name} ({a.code})</li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   )
