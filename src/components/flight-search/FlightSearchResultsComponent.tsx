@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import useFlightQueryParams from '../../hooks/useFlightQueryParams'
 import type { Flight } from '../../models/flight.model'
 import type { FlightSearchParams } from '../../hooks/useFlightSearch'
@@ -16,9 +16,14 @@ export default function FlightSearchResultsComponent({ flights = [], onSelect, c
   const { query } = useFlightQueryParams()
 
   // Convert query (which includes explicitlySuppliedValues) into FlightSearchParams
-  const applyQueryParams = (q: FlightQueryWithSupplied): FlightSearchParams => {
+  const applyQueryParams = (snapshot: FlightQueryWithSupplied): FlightSearchParams => {
 
-    
+    // default to page 1, perPage 8
+    snapshot.page = snapshot.page ?? 1
+    snapshot.perPage = snapshot.perPage ?? 8
+
+
+
 
     // const parseDate = (s?: string) => {
     //   if (!s) return undefined
@@ -45,6 +50,50 @@ export default function FlightSearchResultsComponent({ flights = [], onSelect, c
     return params
   }
 
+  // Keep a ref to the last-seen query so we can compare current vs incoming
+  const lastQueryRef = useRef<FlightQueryWithSupplied | null>(null)
+
+  /**
+   * Determine whether a transition from `prev` -> `next` should be
+   * considered a "pagination-only" change. Per rules:
+   * - compare all fields EXCEPT: 'departFrom', 'page', 'tab', 'explicitlySuppliedValues'
+   * - return true only when either:
+   *    a) the only change is the page number, OR
+   *    b) the only change is departFrom transitioning from a concrete value -> blank
+   */
+  const checkIsPaginationOnlyChange = (prev: FlightQueryWithSupplied, next: FlightQueryWithSupplied): boolean => {
+    const excluded = new Set(['departFrom', 'page', 'tab', 'explicitlySuppliedValues'])
+
+    // collect all keys present on either object
+    const keys = new Set<string>([...Object.keys(prev), ...Object.keys(next)])
+
+    // check for any differences on non-excluded keys
+    for (const k of keys) {
+      if (excluded.has(k)) continue
+      const a = (prev as Record<string, unknown>)[k]
+      const b = (next as Record<string, unknown>)[k]
+      const na = a == null ? '' : String(a)
+      const nb = b == null ? '' : String(b)
+      if (na !== nb) return false
+    }
+
+    // now check allowed changes
+    const prevPage = prev.page ?? undefined
+    const nextPage = next.page ?? undefined
+    const pageChanged = (prevPage ?? 0) !== (nextPage ?? 0)
+
+    const prevDepart = prev.departFrom ?? ''
+    const nextDepart = next.departFrom ?? ''
+    const departRemoved = prevDepart !== '' && nextDepart === ''
+
+    // allowed: only page changed
+    if (pageChanged && !departRemoved) return true
+    // allowed: only departFrom concrete -> blank
+    if (departRemoved && !pageChanged) return true
+
+    return false
+  }
+
   // Page_Load: run initialization side-effects once on mount
   const Page_Load = useCallback(() => {
     // small hook point for initialization (analytics, focus, debug)
@@ -58,8 +107,17 @@ export default function FlightSearchResultsComponent({ flights = [], onSelect, c
 
   useEffect(() => {
     Page_Load()
+    // compare incoming query to last seen and log whether it's pagination-only
+    const prev = lastQueryRef.current
+    let isPaginationOnlyChange = false
+    if (prev) {
+      isPaginationOnlyChange = checkIsPaginationOnlyChange(prev, query as FlightQueryWithSupplied)
+      console.debug('FlightSearchResultsComponent — isPaginationOnlyChange:', isPaginationOnlyChange)
+    }
+    // update last seen
+    lastQueryRef.current = query as FlightQueryWithSupplied
     // run only once on mount (Page_Load is stable via useCallback)
-  }, [Page_Load])
+  }, [Page_Load, query])
   if (!flights || flights.length === 0) {
     return <div className={`flight-search-results ${className}`}>No flights</div>
   }
