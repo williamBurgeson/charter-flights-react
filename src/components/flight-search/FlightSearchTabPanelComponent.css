@@ -1,0 +1,49 @@
+.flight-search-tab-panel-component {
+  padding: 12px;
+  background: var(--card-bg, #fff);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 6px;
+}
+
+.flight-search-tab-panel-component {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.flight-search-tab-panel-component > .MuiBox-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.flight-search-tab-panel-first,
+.flight-search-tab-panel-second,
+.flight-search-tab-panel-third {
+  padding: 12px;
+  background: rgba(0,0,0,0.02);
+  border-radius: 4px;
+  /* make content areas share remaining space */
+  flex: 1 1 0;
+  overflow: auto;
+}
+
+.flight-search-tab-panel-component h3 {
+  margin: 0 0 8px 0;
+}
+
+/* Make tabs take only their natural height but distribute tab items equally */
+.flight-search-tab-panel-component .MuiTabs-root {
+  /* ensure tabs don't collapse when container is flexible */
+  flex: 0 0 auto;
+}
+
+/* Make each Tab take equal width so tabs are positioned uniformly */
+.flight-search-tab-panel .MuiTabs-flexContainer .MuiTab-root {
+  flex: 1 1 0;
+  max-width: none;
+}
+
+.flight-search-tab-panel MuiBox-root {
+  display: flex;
+}

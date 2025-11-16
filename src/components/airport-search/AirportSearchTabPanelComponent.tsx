@@ -27,12 +27,12 @@ export default function AirportSearchTabPanelComponent() {
         </TabPanel>
         <TabPanel value={value} index={1}>
           <div className="airport-search-tab-panel-by-territories">
-            Second content
+            Search for airports by continent/territory... (coming soon)
           </div>
         </TabPanel>
         <TabPanel value={value} index={2}>
           <div className="airport-search-tab-panel-from-point">
-            Third content
+            Search for airports from a specific point... (coming soon)
           </div>
         </TabPanel>
       </Box>
