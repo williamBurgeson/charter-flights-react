@@ -20,7 +20,16 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import 'leaflet.markercluster'
 
 import type { GeoPoint } from '../models/geo-types'
-type MarkerData = { id: string; lat: number; lon: number; title?: string; popupHtml?: string }
+export type MarkerData = { id: string; lat: number; lon: number; title?: string; popupHtml?: string }
+// Payload sent to parent when a marker is selected/clicked. Use PascalCase for
+// the type name and camelCase for the prop (`onMarkerSelect`).
+export type MarkerSelectPayload = {
+  id: string
+  lat: number
+  lon: number
+  title?: string
+  popupHtml?: string
+}
 export type MapBoundsPayload = { southWest: GeoPoint; northEast: GeoPoint; center: GeoPoint; zoom: number }
 export type MapBoundsCallback = (b: MapBoundsPayload) => void
 
@@ -30,11 +39,13 @@ export default function LeafletMapHostComponent({
   zoom = null,
   mapUpdatedEvent,
   markers,
+  onMarkerSelect,
 }: {
   centerGeoPoint?: GeoPoint | null
   zoom?: number | null
   mapUpdatedEvent?: MapBoundsCallback
   markers?: MarkerData[]
+  onMarkerSelect?: (p: MarkerSelectPayload) => void
 }) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const boundsRef = useRef<L.LatLngBounds | null>(null)
@@ -54,12 +65,20 @@ export default function LeafletMapHostComponent({
         lon: m.lon,
         markerInstance: marker,
       })
+      // Forward the selection to the parent if requested
+      try {
+        if (typeof onMarkerSelect === 'function') {
+          onMarkerSelect({ id: m.id, lat: m.lat, lon: m.lon, title: m.title, popupHtml: m.popupHtml })
+        }
+      } catch (pf) {
+        console.error('LeafletMapHostComponent: onMarkerSelect handler threw', pf)
+      }
       // If the MarkerData `id` contains an airport code, this is a good
       // place to extract and use it. For now we just log it.
     } catch (e) {
       console.error('LeafletMapHostComponent: error in onMarkerClick', e)
     }
-  }, [])
+  }, [onMarkerSelect])
 
   const renderMarkers = (map: L.Map, markers?: MarkerData[]) => {
     if (!map) return

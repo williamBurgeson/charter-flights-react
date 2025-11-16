@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useMemo } from 'react'
-import LeafletMapHostComponent, { type MapBoundsPayload } from './LeafletMapHostComponent'
+import LeafletMapHostComponent, { type MapBoundsPayload, type MarkerSelectPayload } from './LeafletMapHostComponent'
 import './MapComponent.css'
 import { useContinentSearch } from '../hooks/useContinentSearch'
 import type { Continent } from '../models/continent.model'
@@ -16,6 +16,8 @@ export default function MapComponent() {
   const [airportsInView, setAirportsInView] = useState<Airport[]>([])
   const centerRef = useRef<{ lat_decimal: number; lon_decimal: number } | null>(null)
   const { searchAirports } = useAirportSearch()
+
+  const [lastSelectedAirport, setLastSelectedAirport] = useState<Airport | null>(null)
 
   const handleMapUpdated = useCallback(async (b: MapBoundsPayload) => {
     console.log('MapComponent: bounds changed', b)
@@ -54,10 +56,27 @@ export default function MapComponent() {
     return airportsInView.map(a => ({ id: a.code, lat: a.lat_decimal, lon: a.lon_decimal, title: a.name, popupHtml: `<strong>${a.name}</strong><br/>${a.code}` }))
   }, [airportsInView])
 
+  const handleMarkerSelect = useCallback((p: MarkerSelectPayload) => {
+    try {
+      // Prevent repeat handling of the same airport
+      if (lastSelectedAirport && lastSelectedAirport.code === p.id) {
+        console.log('MapComponent: marker select ignored (same as last)', p.id)
+        return
+      }
+
+      const found = airportsInView.find(a => a.code === p.id) || null
+      setLastSelectedAirport(found)
+      console.log('MapComponent: marker selected', p.id, found)
+      // TODO: trigger any further actions (detail panel, fetch extra data, etc.)
+    } catch (e) {
+      console.error('MapComponent: error handling marker select', e)
+    }
+  }, [airportsInView, lastSelectedAirport])
+
   return (
     <div className="map-component">
       <h2>World Map (Leaflet)</h2>
-  <LeafletMapHostComponent mapUpdatedEvent={handleMapUpdated} markers={markers} />
+  <LeafletMapHostComponent mapUpdatedEvent={handleMapUpdated} markers={markers} onMarkerSelect={handleMarkerSelect} />
       <div className="map-continents-debug" aria-live="polite">
         {continentsInView && (
           <div>
