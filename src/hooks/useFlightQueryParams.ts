@@ -1,0 +1,86 @@
+import { useMemo, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
+
+export type FlightQuery = {
+  origin?: string
+  dest?: string
+  depart?: string // ISO date YYYY-MM-DD
+  return?: string // ISO date
+  adults?: number
+  page?: number
+  perPage?: number
+  sort?: string
+  tab?: 'criteria' | 'results'
+}
+
+const toNumber = (v: string | null | undefined, fallback?: number) => {
+  if (!v) return fallback
+  const n = Number(v)
+  return Number.isFinite(n) ? n : fallback
+}
+
+const parseParams = (sp: URLSearchParams): FlightQuery => {
+  const q: FlightQuery = {}
+  const origin = sp.get('origin')
+  const dest = sp.get('dest')
+  const depart = sp.get('depart')
+  const ret = sp.get('return')
+  const adults = toNumber(sp.get('adults') ?? undefined)
+  const page = toNumber(sp.get('page') ?? undefined, 1)
+  const perPage = toNumber(sp.get('perPage') ?? undefined, 20)
+  const sort = sp.get('sort') ?? undefined
+  const tab = (sp.get('tab') as FlightQuery['tab']) ?? undefined
+
+  if (origin) q.origin = origin
+  if (dest) q.dest = dest
+  if (depart) q.depart = depart
+  if (ret) q.return = ret
+  if (adults !== undefined) q.adults = adults
+  if (page !== undefined) q.page = page
+  if (perPage !== undefined) q.perPage = perPage
+  if (sort) q.sort = sort
+  if (tab) q.tab = tab
+  return q
+}
+
+const serialize = (q: FlightQuery): URLSearchParams => {
+  const sp = new URLSearchParams()
+  if (q.origin) sp.set('origin', q.origin)
+  if (q.dest) sp.set('dest', q.dest)
+  if (q.depart) sp.set('depart', q.depart)
+  if (q.return) sp.set('return', q.return)
+  if (q.adults !== undefined) sp.set('adults', String(q.adults))
+  if (q.page !== undefined) sp.set('page', String(q.page))
+  if (q.perPage !== undefined) sp.set('perPage', String(q.perPage))
+  if (q.sort) sp.set('sort', q.sort)
+  if (q.tab) sp.set('tab', q.tab)
+  return sp
+}
+
+export function useFlightQueryParams() {
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const query = useMemo(() => parseParams(searchParams), [searchParams])
+
+  /**
+   * Update query params by merging partial changes. By default this uses
+   * replace (history.replaceState) to avoid creating a new history entry on
+   * every small change; pass { replace: false } to push.
+   */
+  const setQuery = useCallback(
+    (partial: Partial<FlightQuery>, opts: { replace?: boolean } = { replace: true }) => {
+      const merged: FlightQuery = { ...query, ...partial }
+      const sp = serialize(merged)
+      setSearchParams(sp, { replace: !!opts.replace })
+    },
+    [query, setSearchParams]
+  )
+
+  const applyQuery = useCallback((partial: Partial<FlightQuery>) => setQuery(partial, { replace: false }), [setQuery])
+
+  const resetQuery = useCallback(() => setSearchParams(new URLSearchParams(), { replace: false }), [setSearchParams])
+
+  return { query, setQuery, applyQuery, resetQuery }
+}
+
+export default useFlightQueryParams
