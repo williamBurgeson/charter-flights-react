@@ -22,6 +22,11 @@ export default function MapComponent() {
   // MapComponent and consumers may rely on it. Using state makes the
   // selection explicit and observable.
   const [lastSelectedAirport, setLastSelectedAirport] = useState<Airport | null>(null)
+  // Also track a ref mirror of the selected airport so callbacks that are
+  // passed to children don't need to include `lastSelectedAirport` in their
+  // dependency arrays (which would cause needless re-creation). Keep the
+  // ref in sync with state when selection changes.
+  const lastSelectedAirportRef = useRef<Airport | null>(null)
   // Simple in-memory cache for airport lookups by id (code). This avoids
   // repeated fetches to the accessor and keeps the selected-airport lookup
   // fast.
@@ -38,13 +43,17 @@ export default function MapComponent() {
       // previously-selected airport is no longer visible. If the user pans
       // slightly such that the airport remains in view, keep the selection.
       try {
-        const prev = lastSelectedAirport
+        const prev = lastSelectedAirportRef.current
         if (prev) {
           const inBounds = isInBounds({ southWest: b.southWest, northEast: b.northEast }, prev.lat_decimal, prev.lon_decimal)
-          if (!inBounds) setLastSelectedAirport(null)
+          if (!inBounds) {
+            lastSelectedAirportRef.current = null
+            setLastSelectedAirport(null)
+          }
         }
       } catch {
         // ignore any unexpected shape errors and clear selection to be safe
+        lastSelectedAirportRef.current = null
         setLastSelectedAirport(null)
       }
       console.log('MapComponent: continents in view', list)
@@ -71,7 +80,7 @@ export default function MapComponent() {
     } catch (e) {
       console.error('MapComponent: failed to get continents for bounds', e)
     }
-  }, [findContinentsIntersectingRegion, searchAirports, lastSelectedAirport])
+  }, [findContinentsIntersectingRegion, searchAirports])
 
   // Convert domain airports -> marker data for the Leaflet host
   const markers = useMemo(() => {
@@ -100,8 +109,9 @@ export default function MapComponent() {
   // decision logic testable and separate from state application.
   const handleMarkerSelect = useCallback(async (p: MarkerSelectPayload) => {
     try {
-      // Synchronous check against state to avoid stale-closure pitfalls
-      if (lastSelectedAirport && lastSelectedAirport.code === p.id) {
+      // Synchronous check against ref to avoid stale-closure pitfalls and
+      // prevent recreating this callback when state changes.
+      if (lastSelectedAirportRef.current && lastSelectedAirportRef.current.code === p.id) {
         console.log('MapComponent: marker select ignored (same as last)', p.id)
         return
       }
@@ -119,14 +129,16 @@ export default function MapComponent() {
         airportCacheRef.current.set(p.id, found)
       }
 
-      // Update state so consumers can respond to the selection
+      // Update state and ref so consumers can respond to the selection and
+      // callbacks can read the latest value synchronously.
+      lastSelectedAirportRef.current = found
       setLastSelectedAirport(found)
       console.log('MapComponent: marker selected', p.id, found)
       // TODO: trigger any further actions (detail panel, fetch extra data, etc.)
     } catch (e) {
       console.error('MapComponent: error handling marker select', e)
     }
-  }, [getAirportByCode, lastSelectedAirport])
+  }, [getAirportByCode])
 
   return (
     <div className="map-component">
@@ -145,6 +157,9 @@ export default function MapComponent() {
         )}
         <div className="map-airports-debug">
           <strong>Airports in view:</strong> {airportsInView ? airportsInView.length : 0}
+          <div className="map-selected-debug">
+            <strong>Selected airport:</strong> {lastSelectedAirport ? `${lastSelectedAirport.name} (${lastSelectedAirport.code})` : 'none'}
+          </div>
           {airportsInView && airportsInView.length > 0 && (
             <ul>
               {airportsInView.slice(0,10).map(a => (
