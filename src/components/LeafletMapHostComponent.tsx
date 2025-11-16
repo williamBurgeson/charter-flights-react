@@ -1,6 +1,23 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+// Import leaflet's default marker images so the bundler serves/caches them
+// import markerIconUrl from 'leaflet/dist/images/marker-icon.png'
+// import markerIconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
+// import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png'
+
+// L.Icon.Default.mergeOptions({
+//   iconRetinaUrl: markerIconRetinaUrl,
+//   iconUrl: markerIconUrl,
+//   shadowUrl: markerShadowUrl,
+// })
+
+// MarkerCluster plugin + styles (import after Leaflet)
+// @ts-expect-error MarkerCluster CSS has no type declarations
+import 'leaflet.markercluster/dist/MarkerCluster.css'
+// @ts-expect-error MarkerCluster CSS has no type declarations
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
+import 'leaflet.markercluster'
 
 import type { GeoPoint } from '../models/geo-types'
 type MarkerData = { id: string; lat: number; lon: number; title?: string; popupHtml?: string }
@@ -36,48 +53,58 @@ export default function LeafletMapHostComponent({
       markersLayerRef.current.addTo(map)
     }
 
-    const layer = markersLayerRef.current!
+    // const layer = markersLayerRef.current!
     // Clear existing markers
     console.log('LeafletMapHostComponent: renderMarkers start; incoming markers length', markers?.length ?? 0)
-    layer.clearLayers()
+    // layer.clearLayers()
 
     if (markers && markers.length) {
       console.log('LeafletMapHostComponent: rendering markers count', markers.length)
-      // I'm sure this can be done more succinctly but time marches on...
-      const created: L.Marker[] = (markers as MarkerData[]).map((m) => {
-
+      const clusterGroup = L.markerClusterGroup()
+      markers.forEach(m => {
         const mk = L.marker([m.lat, m.lon], { icon: new L.Icon.Default() })
         if (m.popupHtml) mk.bindPopup(m.popupHtml)
         if (m.title) mk.bindTooltip(m.title)
-        return mk
+        clusterGroup.addLayer(mk)
       })
-      const subgroup = L.layerGroup(created as unknown as L.Layer[])
-      layer.addLayer(subgroup)
 
-      // If markers did not get attached to the map for some reason, force add them and log state
-      try {
-        created.forEach((cm, idx) => {
-          try {
-            const mAny = cm as unknown as { _map?: L.Map; _icon?: HTMLElement; addTo?: (m: L.Map) => L.Marker }
-            if (!mAny._map) {
-              try {
-                // Looks like this is the bit that does the work!
-                if (typeof mAny.addTo === 'function') {
-                  mAny.addTo(map)
+      map.addLayer(clusterGroup)
 
-                }
-              } catch (fae) {
-                console.error(`LeafletMapHostComponent: forced addTo failed for marker[${idx}]`, fae)
-              }
-            }
+      // // I'm sure this can be done more succinctly but time marches on...
+      // const created: L.Marker[] = (markers as MarkerData[]).map((m) => {
 
-          } catch (inner) {
-            console.error('LeafletMapHostComponent: per-marker attach check failed', inner)
-          }
-        })
-      } catch (e) {
-        console.error('LeafletMapHostComponent: error during markers attachment', e)
-      }
+      //   const mk = L.marker([m.lat, m.lon], { icon: new L.Icon.Default() })
+      //   if (m.popupHtml) mk.bindPopup(m.popupHtml)
+      //   if (m.title) mk.bindTooltip(m.title)
+      //   return mk
+      // })
+      // const subgroup = L.layerGroup(created as unknown as L.Layer[])
+      // layer.addLayer(subgroup)
+
+      // // If markers did not get attached to the map for some reason, force add them and log state
+      // try {
+      //   created.forEach((cm, idx) => {
+      //     try {
+      //       const mAny = cm as unknown as { _map?: L.Map; _icon?: HTMLElement; addTo?: (m: L.Map) => L.Marker }
+      //       if (!mAny._map) {
+      //         try {
+      //           // Looks like this is the bit that does the work!
+      //           if (typeof mAny.addTo === 'function') {
+      //             mAny.addTo(map)
+
+      //           }
+      //         } catch (fae) {
+      //           console.error(`LeafletMapHostComponent: forced addTo failed for marker[${idx}]`, fae)
+      //         }
+      //       }
+
+      //     } catch (inner) {
+      //       console.error('LeafletMapHostComponent: per-marker attach check failed', inner)
+      //     }
+      //   })
+      // } catch (e) {
+      //   console.error('LeafletMapHostComponent: error during markers attachment', e)
+      // }
 
 
     } else {
