@@ -66,76 +66,27 @@ export default function LeafletMapHostComponent({
         created.forEach((cm, idx) => {
           try {
             const mAny = cm as unknown as { _map?: L.Map; _icon?: HTMLElement; addTo?: (m: L.Map) => L.Marker }
-            console.log(`LeafletMapHostComponent: marker[${idx}] pre-attach _map`, !!mAny._map, ' _icon', !!mAny._icon)
             if (!mAny._map) {
               try {
+                // Looks like this is the bit that does the work!
                 if (typeof mAny.addTo === 'function') {
                   mAny.addTo(map)
-                  console.log(`LeafletMapHostComponent: marker[${idx}] forced addTo(map)`)
+
                 }
               } catch (fae) {
-                console.log(`LeafletMapHostComponent: forced addTo failed for marker[${idx}]`, fae)
+                console.error(`LeafletMapHostComponent: forced addTo failed for marker[${idx}]`, fae)
               }
             }
-            console.log(`LeafletMapHostComponent: marker[${idx}] post-attach _map`, !!mAny._map, ' _icon', !!mAny._icon)
+
           } catch (inner) {
-            console.log('LeafletMapHostComponent: per-marker attach check failed', inner)
+            console.error('LeafletMapHostComponent: per-marker attach check failed', inner)
           }
         })
-      } catch {
-        // swallow
+      } catch (e) {
+        console.error('LeafletMapHostComponent: error during markers attachment', e)
       }
 
-      // Diagnostics: log that layers were added and pane child counts
-      try {
-        const layersNow = markersLayerRef.current?.getLayers().length ?? 0
-        console.log('LeafletMapHostComponent: markersLayer now has layers count', layersNow)
-        const overlayPane = map.getPanes().overlayPane
-        const markerPane = map.getPanes().markerPane
-        console.log('LeafletMapHostComponent: overlayPane childElementCount', overlayPane?.childElementCount)
-        console.log('LeafletMapHostComponent: markerPane childElementCount', markerPane?.childElementCount)
-        // Log first few created marker internal details
-        created.slice(0, 10).forEach((cm, idx) => {
-          try {
-            const rendererName = ((cm as unknown) as { _renderer?: { constructor?: { name?: string } } })._renderer?.constructor?.name ?? 'unknown'
-            console.log(`LeafletMapHostComponent: marker[${idx}] lat/lng`, cm.getLatLng(), 'renderer', rendererName)
-            // Log when marker DOM icon is attached
-            try {
-              ;(cm as unknown as L.Marker).on('add', () => {
-                try {
-                  const iconEl = ((cm as unknown) as { _icon?: HTMLElement })._icon
-                  console.log(`LeafletMapHostComponent: marker[${idx}] added; _icon:`, iconEl, 'inDOM', iconEl ? document.body.contains(iconEl) : false)
-                  if (iconEl) {
-                    const cs = getComputedStyle(iconEl)
-                    console.log(`LeafletMapHostComponent: marker[${idx}] icon computed style`, { display: cs.display, visibility: cs.visibility, opacity: cs.opacity })
-                  }
-                } catch (ie) {
-                  console.log('LeafletMapHostComponent: marker add diagnostic failed', ie)
-                }
-              })
-            } catch (evtErr) {
-              console.log('LeafletMapHostComponent: marker on add attach failed', evtErr)
-            }
-            // Also schedule a short deferred check after DOM updates
-            setTimeout(() => {
-              try {
-                const iconEl = ((cm as unknown) as { _icon?: HTMLElement })._icon
-                console.log(`LeafletMapHostComponent: marker[${idx}] delayed check _icon`, iconEl, 'inDOM', iconEl ? document.body.contains(iconEl) : false)
-                if (iconEl) {
-                  const cs = getComputedStyle(iconEl)
-                  console.log(`LeafletMapHostComponent: marker[${idx}] delayed icon style`, { display: cs.display, visibility: cs.visibility, opacity: cs.opacity })
-                }
-              } catch (dErr) {
-                console.log('LeafletMapHostComponent: delayed marker check failed', dErr)
-              }
-            }, 80)
-          } catch (e) {
-            console.log('LeafletMapHostComponent: marker debug failed', e)
-          }
-        })
-      } catch {
-        // swallow diagnostics failures
-      }
+
     } else {
       console.log('LeafletMapHostComponent: no markers to render')
     }
