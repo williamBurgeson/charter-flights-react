@@ -1,0 +1,99 @@
+.tab-set {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* Ensure the MUI Tabs container uses the full width and its flex container stretches */
+.tab-set .MuiTabs-root {
+  width: 100%;
+}
+.tab-set .MuiTabs-flexContainer {
+  display: flex;
+  width: 100%;
+  /* Make sure the flex container aligns its children centrally on the cross axis */
+  align-items: center;
+}
+
+/* Make each Tab take equal space so we can align content within them */
+.tab-set .MuiTabs-flexContainer .MuiTab-root {
+  /* Allow tabs to size to their content (flex-basis: auto) and then grow
+     proportionally to their content size so longer labels receive more space. */
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  /* Ensure the tab root vertically centers its contents so all tabs
+     (left/center/right) have the same vertical alignment. */
+  display: flex;
+  align-items: center;
+  /* Ensure each tab centers itself within the Tabs container regardless of
+     any external baseline or align-self rules. This prevents one tab from
+     appearing higher or lower than its siblings. */
+  align-self: center;
+  /* Normalize vertical padding to avoid visual offsets from differing font metrics */
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+/* Header alignment helpers applied to the Tab root (we also target the inner wrapper) */
+.tab-header-left,
+.tab-header-left  {
+  /* Keep horizontal alignment consistent: center the label horizontally
+     within the tab. justify-content controls the main axis (horizontal here),
+     so center works for all tabs. */
+  justify-content: center;
+}
+
+.tab-header-inner,
+.tab-header-inner {
+  /* Keep horizontal alignment consistent: center the label horizontally
+     within the tab. justify-content controls the main axis (horizontal here),
+     so center works for all tabs. */
+  justify-content: center;
+}
+
+.tab-header-right,
+.tab-header-right {
+  /* Keep horizontal alignment consistent: center the label horizontally
+     within the tab. justify-content controls the main axis (horizontal here),
+     so center works for all tabs. */
+  justify-content: center;
+}
+
+.tab-header-left,
+.tab-header-left .MuiTab-wrapper,
+.tab-header-inner,
+.tab-header-inner .MuiTab.wrapper,
+.tab-header-right,
+.tab-header-right .MuiTab-wrapper {
+  /* Keep horizontal alignment consistent: center the label horizontally
+     within the tab. justify-content controls the main axis (horizontal here),
+     so center works for all tabs. */
+  text-align: center;
+  _justify-content: center;
+}
+
+
+/* Also ensure the inner wrapper is a flex container and centers items vertically.
+   This makes vertical centering robust even if the inner wrapper's default
+   display changes or the label wraps to multiple lines. */
+.tab-set .MuiTab-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  /* Normalize line-height to avoid baseline shifts when label lengths differ */
+  line-height: 1.2;
+}
+
+/* Common helper class applied to all tabs for shared rules */
+.tab-header {
+  /* keep cursor and user-select behavior consistent */
+  cursor: pointer;
+  user-select: none;
+  /* reduce side padding slightly so content-based sizing is visible */
+  padding-left: 12px;
+  padding-right: 12px;
+  /* make it explicit that the tab content is centered horizontally */
+  _justify-content: center;
+  text-align: center;
+}

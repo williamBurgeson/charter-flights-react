@@ -2,8 +2,8 @@ import { useState } from 'react'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
 import Box from '@mui/material/Box'
+import '../common/tabs.css'
 import './FlightSearchTabPanelComponent.css'
-import MapComponent from '../MapComponent'
 
 function TabPanel({ children, value, index }: { children?: React.ReactNode; value: number; index: number }) {
   return value === index ? <Box sx={{ p: 2 }}>{children}</Box> : null
@@ -14,10 +14,12 @@ export default function FlightSearchTabPanelComponent() {
   return (
     <div className="flight-search-tab-panel-component">
       <Box>
-        <Tabs value={value} onChange={(_, v) => setValue(v)} aria-label="flight search tabs" variant="scrollable" scrollButtons="auto">
-          <Tab label="by Map" />
-          <Tab label="By Territories" />
-        </Tabs>
+        <div className="tab-set">
+          <Tabs value={value} onChange={(_, v) => setValue(v)} aria-label="flight search tabs" variant="scrollable" scrollButtons="auto">
+            <Tab label="Criteria" className="tab-header tab-header-left" />
+            <Tab label="Results" className="tab-header tab-header-right" />
+          </Tabs>
+        </div>
 
         <TabPanel value={value} index={0}>
           <div className="flight-search-tab-panel-criteria">

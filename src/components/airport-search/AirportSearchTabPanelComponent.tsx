@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
 import Box from '@mui/material/Box'
+import '../common/tabs.css'
 import './AirportSearchTabPanelComponent.css'
 import MapComponent from '../MapComponent'
 
@@ -14,11 +15,13 @@ export default function AirportSearchTabPanelComponent() {
   return (
     <div className="airport-search-tab-panel-component">
       <Box>
-        <Tabs value={value} onChange={(_, v) => setValue(v)} aria-label="example tabs" variant="scrollable" scrollButtons="auto">
-          <Tab label="by Map" />
-          <Tab label="By Territories" />
-          <Tab label="From Point" />
-        </Tabs>
+        <div className="tab-set">
+          <Tabs value={value} onChange={(_, v) => setValue(v)} aria-label="example tabs" variant="scrollable" scrollButtons="auto">
+            <Tab label="by Map" className="tab-header tab-header-left" />
+            <Tab label="By Territories" className="tab-header tab-header-inner" />
+            <Tab label="From Point" className="tab-header tab-header-right" />
+          </Tabs>
+        </div>
 
         <TabPanel value={value} index={0}>
           <div className="airport-search-tab-panel-by-maps">
