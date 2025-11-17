@@ -4,6 +4,6 @@ import { makeGenericAccessorHook } from "./makeGenericAccessorHook";
 export const useTerritories = makeGenericAccessorHook<
   Territory & Record<string, string | number | boolean | symbol>
 >(
-  "/territories.json",
+  "./territories.json",
   { uniqueKeys: ["code", "name"], nonUniqueKeys: ["parentTerritory", "continents"] }
 );
