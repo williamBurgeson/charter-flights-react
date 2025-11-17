@@ -2,7 +2,7 @@ name: Deploy Vite site to GitHub Pages
 
 on:
   push:
-    branches: ["master", "tasks/deployment"] # or main, if using main
+    branches: ["main", "master", "tasks/deployment"] # or main, if using main
 
 permissions:
   contents: read
@@ -25,6 +25,11 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Validate dist
+        run: |
+          echo "Listing dist directory:"
+          ls -la dist
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
