@@ -13,7 +13,7 @@ const NAV_ITEMS = [
   { to: '/', label: 'Home' },
   { to: '/map', label: 'Map' },
   { to: '/airports', label: 'Airports' },
-  { to: '/flight-search', label: 'Flight Search' },
+  { to: '/flight-search?departFrom=now&page=1&pageSize=6', label: 'Flight Search' },
   { to: '/settings', label: 'Settings' },
   { to: '/empty', label: 'Empty' },
 ]
