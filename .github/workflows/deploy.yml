@@ -5,6 +5,7 @@ on:
     branches: ["master", "tasks/deployment"] # or main, if using main
 
 permissions:
+  contents: read
   pages: write
   id-token: write
 
