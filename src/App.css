@@ -349,6 +349,12 @@ header {
   color: #0c4f21;
 }
 
+.arrow.disabled {
+  color: #c0c0c0;
+  cursor: default;
+  pointer-events: none;
+}
+
 /* Slightly smaller, keep row layout for narrow-but-not-tiny screens */
 @media (max-width: 768px) {
   header {

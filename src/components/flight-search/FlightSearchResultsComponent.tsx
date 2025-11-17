@@ -12,6 +12,7 @@ export default function FlightSearchResultsComponent() {
   const { searchFlights } = useFlightSearch()
   
   const [flightsToDisplay, setFlightsToDisplay] = useState<FlightSearchResult | null>(null)
+  const [activeSearchParams, setActiveSearchParams] = useState<FlightSearchParams | null>(null)
 
   const applyQueryParams = useCallback((snapshot: FlightQuery): FlightSearchParams => {
     if (snapshot.pageSize === undefined) {
@@ -35,11 +36,10 @@ export default function FlightSearchResultsComponent() {
   const Page_Load = useCallback(() => {
     const doPage_Load = async() => {
       const snapshot = getQuery()
-      const fsParams = applyQueryParams(snapshot as FlightQuery)
-
-  // store fsParams locally if needed in future; currently unused
-      const results = await searchFlights(fsParams)
-      setFlightsToDisplay(() => results)
+    const fsParams = applyQueryParams(snapshot as FlightQuery)
+    setActiveSearchParams(fsParams)
+    const results = await searchFlights(fsParams)
+    setFlightsToDisplay(() => results)
     }
     doPage_Load()
   }, [getQuery, applyQueryParams, searchFlights])
@@ -55,7 +55,7 @@ export default function FlightSearchResultsComponent() {
           <FlightItemDisplayComponent key={index} flight={flight} />
         )
       })}
-      <FlightResultsFooterComponent searchResults={flightsToDisplay} />
+      <FlightResultsFooterComponent searchResults={flightsToDisplay} searchParams={activeSearchParams} />
     </div>
   )
 }
