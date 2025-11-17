@@ -2,8 +2,7 @@ name: Deploy Vite site to GitHub Pages
 
 on:
   push:
-    branches: ["master"]  # or main, if using main
-    branches: ["tasks/deployment"]  # or main, if using main
+    branches: ["master", "tasks/deployment"] # or main, if using main
 
 permissions:
   pages: write
