@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { useAirportSearch, type AirportSearchParams } from "./useAirportSearch";
 import { useFlights } from "./data/useFlights";
+import type { Flight } from '../models/flight.model';
 
 export interface FlightSearchParams {
   airportFromSearchParams?: AirportSearchParams;
@@ -15,14 +16,18 @@ export interface FlightSearchParams {
   pageSize?: number;
 }
 
+export interface FlightSearchResult {
+  flights: Flight[];
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;
+}
+
 export function useFlightSearch() {
   const { searchAirports } = useAirportSearch();
   const { filterByAirportCodes } = useFlights();
 
-  // Memoize the searchFlights function so callers (like App) get a stable
-  // identity and don't accidentally retrigger effects on every render.
   const searchFlights = useCallback(async (params: FlightSearchParams) => {
-    // Implementation to search flights based on params
 
     const candidateAirportsFrom = await searchAirports(params.airportFromSearchParams || {});
     const candidateAirportsTo = await searchAirports(params.airportToSearchParams || {});
@@ -59,13 +64,32 @@ export function useFlightSearch() {
       candidateFlights = candidateFlights.slice(0 - itemsFromEnd);
     }
 
-    if (params.pageIndex !== undefined && params.pageSize !== undefined) {
-      const start = params.pageIndex * params.pageSize;
-      const end = start + params.pageSize;
-      candidateFlights = candidateFlights.slice(start, end);
+    if (params.pageIndex === undefined) {
+      params.pageIndex = 0;
     }
-    
-    return candidateFlights;
+
+    if (params.pageSize === undefined) {
+      params.pageSize = candidateFlights.length;
+    }
+
+    const start = params.pageIndex * params.pageSize;
+    const end = start + params.pageSize;
+
+    // totalCount should represent the number of matching items BEFORE paging
+    // (i.e. the full set after filtering and any pre-paging trimming like
+    // itemsFromBeginning/itemsFromEnd). Capture that size, then slice for the
+    // current page.
+    const totalCount = candidateFlights.length
+    candidateFlights = candidateFlights.slice(start, end);
+
+    const results = {
+      flights: candidateFlights,
+      totalCount,
+      pageIndex: params.pageIndex,
+      pageSize: params.pageSize,
+    }
+
+    return results;
   }, [searchAirports, filterByAirportCodes]);
 
   return { searchFlights };
