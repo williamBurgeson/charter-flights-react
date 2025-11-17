@@ -56,9 +56,6 @@ export function useAirportSearch() {
     
     let candidateTerritories: Territory[] | null  = null;
 
-        // Note that if both continentCodes and countryCodes are provided, we need to combine the results, and 
-    // prefer countryCodes over continentCodes in case of overlap (as in the future the the data may be 
-    // enhanced for countries specifically selected rather than all countries in a continent)
     if (params.continentCodes?.length) {
       const countriesFromContinents = await filterCountriesByContinentsValues(params.continentCodes);
 
@@ -135,8 +132,8 @@ export function useAirportSearch() {
       return candidateAirports; 
     }
 
-    // The set up is suboptimal in that it would be better to do this sort of filtering at data source level,
-    // or at the very least inside the repo class useAirports but this is the first instance of comparative 
+    // The set up is inherently suboptimal in that it would be better to do this sort of filtering at data source
+    // level, or at the very least inside the repo class useAirports but this is the first instance of comparative 
     // filtering (i.e. filtering based on greater or less than rather a value match or membership of a list) 
     // so we implement here for now.
     if (candidateAirports === null) {

@@ -15,9 +15,6 @@ type Props = {
 // back to the parsed query's departFrom value. Convert symbolic 'now'
 // into a concrete ISO timestamp at navigation time.
 function getCanonicalDepartFrom(q?: FlightQuery | null, searchParams?: FlightSearchParams | null): string | undefined {
-
-
-
   if (searchParams?.departureDateFrom) return (searchParams.departureDateFrom as Date).toISOString()
   const df = q?.departFrom
   if (!df) return undefined
@@ -26,9 +23,8 @@ function getCanonicalDepartFrom(q?: FlightQuery | null, searchParams?: FlightSea
 }
 
 export default function FlightResultsFooterComponent({ searchResults, searchParams }: Props) {
-  const { getQuery, setQuery } = useFlightQueryParams()
+  const { getQuery } = useFlightQueryParams()
   const navigate = useNavigate()
-  const location = useLocation()
 
   const pageIndex = searchResults?.pageIndex ?? 0
   const pageSize = searchResults?.pageSize ?? (searchResults?.flights?.length ?? 0)
@@ -39,14 +35,7 @@ export default function FlightResultsFooterComponent({ searchResults, searchPara
   const goToPage = useCallback(
     (targetPage: number) => {
       const q = getQuery()
-      // If we're already on the flight-search route, just update the query
-      // if (location.pathname === '/flight-search') {
-      //   setQuery({ page: targetPage })
-      //   return
-      // }
-      // otherwise build a search string from explicitly supplied values and navigate
-      // ensure we carry the canonical departFrom value so the target page uses
-      // the same temporal anchor (prevents showing already-departed flights)
+
       const sp = new URLSearchParams()
       const explicit = q?.explicitlySuppliedValues ?? {}
       for (const [k, v] of Object.entries(explicit)) sp.set(k, v)
@@ -57,7 +46,7 @@ export default function FlightResultsFooterComponent({ searchResults, searchPara
       sp.set('tab', 'results')
       navigate({ pathname: '/flight-search', search: `?${sp.toString()}` })
     },
-    [getQuery, location.pathname, navigate, setQuery, searchParams]
+    [getQuery, navigate, searchParams]
   )
 
   const prevDisabled = currentPage <= 1

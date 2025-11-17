@@ -1,16 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-// Import leaflet's default marker images so the bundler serves/caches them
-// import markerIconUrl from 'leaflet/dist/images/marker-icon.png'
-// import markerIconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
-// import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png'
-
-// L.Icon.Default.mergeOptions({
-//   iconRetinaUrl: markerIconRetinaUrl,
-//   iconUrl: markerIconUrl,
-//   shadowUrl: markerShadowUrl,
-// })
 
 // MarkerCluster plugin + styles (import after Leaflet)
 import 'leaflet.markercluster/dist/MarkerCluster.css'
@@ -19,8 +9,7 @@ import 'leaflet.markercluster'
 
 import type { GeoPoint } from '../models/geo-types'
 export type MarkerData = { id: string; lat: number; lon: number; title?: string; popupHtml?: string }
-// Payload sent to parent when a marker is selected/clicked. Use PascalCase for
-// the type name and camelCase for the prop (`onMarkerSelect`).
+// Payload sent to parent when a marker is selected/clicked. 
 export type MarkerSelectPayload = {
   id: string
   lat: number
@@ -78,7 +67,7 @@ export default function LeafletMapHostComponent({
     }
   }, [onMarkerSelect])
 
-  const renderMarkers = (map: L.Map, markers?: MarkerData[]) => {
+  const renderMarkers = useCallback((map: L.Map, markers?: MarkerData[]) => {
     if (!map) return
 
     // Ensure we have a layer group to manage markers
@@ -99,51 +88,12 @@ export default function LeafletMapHostComponent({
         const mk = L.marker([m.lat, m.lon], { icon: new L.Icon.Default() })
         if (m.popupHtml) mk.bindPopup(m.popupHtml)
         if (m.title) mk.bindTooltip(m.title)
-        // Attach a simple click handler that logs marker details.
-        // This is a small skeleton; later we can forward events to props
-        // or dispatch to a context/Redux store as needed.
+
         mk.on('click', () => onMarkerClick(m, mk))
         clusterGroup.addLayer(mk)
       })
 
       map.addLayer(clusterGroup)
-
-      // // I'm sure this can be done more succinctly but time marches on...
-      // const created: L.Marker[] = (markers as MarkerData[]).map((m) => {
-
-      //   const mk = L.marker([m.lat, m.lon], { icon: new L.Icon.Default() })
-      //   if (m.popupHtml) mk.bindPopup(m.popupHtml)
-      //   if (m.title) mk.bindTooltip(m.title)
-      //   return mk
-      // })
-      // const subgroup = L.layerGroup(created as unknown as L.Layer[])
-      // layer.addLayer(subgroup)
-
-      // // If markers did not get attached to the map for some reason, force add them and log state
-      // try {
-      //   created.forEach((cm, idx) => {
-      //     try {
-      //       const mAny = cm as unknown as { _map?: L.Map; _icon?: HTMLElement; addTo?: (m: L.Map) => L.Marker }
-      //       if (!mAny._map) {
-      //         try {
-      //           // Looks like this is the bit that does the work!
-      //           if (typeof mAny.addTo === 'function') {
-      //             mAny.addTo(map)
-
-      //           }
-      //         } catch (fae) {
-      //           console.error(`LeafletMapHostComponent: forced addTo failed for marker[${idx}]`, fae)
-      //         }
-      //       }
-
-      //     } catch (inner) {
-      //       console.error('LeafletMapHostComponent: per-marker attach check failed', inner)
-      //     }
-      //   })
-      // } catch (e) {
-      //   console.error('LeafletMapHostComponent: error during markers attachment', e)
-      // }
-
 
     } else {
       console.log('LeafletMapHostComponent: no markers to render')
@@ -157,7 +107,7 @@ export default function LeafletMapHostComponent({
       // ignore
     }
     console.log('LeafletMapHostComponent: renderMarkers end')
-  }
+  }, [onMarkerClick])
 
   useEffect(() => {
     if (!mapRef.current) return
@@ -223,7 +173,7 @@ export default function LeafletMapHostComponent({
         }
       }
     }
-  }, [centerGeoPoint, zoom, mapUpdatedEvent])
+  }, [centerGeoPoint, zoom, mapUpdatedEvent, renderMarkers])
 
   // Update markers when the markers prop changes
   useEffect(() => {
@@ -237,7 +187,7 @@ export default function LeafletMapHostComponent({
     return () => {
       // we keep layer for reuse; it will be cleared on next update
     }
-  }, [markers])
+  }, [markers, renderMarkers])
 
   return <div className="map-container" ref={mapRef} aria-label="world map" />
 }
