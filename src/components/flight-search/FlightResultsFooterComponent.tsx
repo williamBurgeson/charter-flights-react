@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import useFlightQueryParams from '../../hooks/useFlightQueryParams'
 import type { FlightQuery } from '../../hooks/useFlightQueryParams'
 import type { FlightSearchResult, FlightSearchParams } from '../../hooks/useFlightSearch'

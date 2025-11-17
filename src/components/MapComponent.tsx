@@ -18,7 +18,8 @@ export type AirportSelectPayload = {
 export default function MapComponent({ onSelectedAirport }: { onSelectedAirport?: (p: AirportSelectPayload) => void } = {}) {
   const { findContinentsIntersectingRegion } = useContinentSearch()
 
-  const [continentsInView, setContinentsInView] = useState<Continent[] | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [/*continentsInView*/ _1, setContinentsInView] = useState<Continent[] | null>(null)
   const [airportsInView, setAirportsInView] = useState<Airport[]>([])
   const centerRef = useRef<{ lat_decimal: number; lon_decimal: number } | null>(null)
   const { searchAirports } = useAirportSearch()
@@ -26,7 +27,8 @@ export default function MapComponent({ onSelectedAirport }: { onSelectedAirport?
   // Track last selection as React state — this is core behavior of the
   // MapComponent and consumers may rely on it. Using state makes the
   // selection explicit and observable.
-  const [lastSelectedAirport, setLastSelectedAirport] = useState<Airport | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [/* lastSelectedAirport */ _2, setLastSelectedAirport] = useState<Airport | null>(null)
   // Also track a ref mirror of the selected airport so callbacks that are
   // passed to children don't need to include `lastSelectedAirport` in their
   // dependency arrays (which would cause needless re-creation). Keep the

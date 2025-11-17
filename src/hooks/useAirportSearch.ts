@@ -33,7 +33,9 @@ function latLonBoundsParamsAreEmpty(params: LatLonBoundsAirportSearchParams): bo
   );
 } 
 
-function convertGeoRegionToLatLonBounds(geoRegion: GeoRegion): LatLonBoundsAirportSearchParams {
+// May be helpful later on but is not currently used elsewhere
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function convertGeoRegionToLatLonBounds(geoRegion: GeoRegion): LatLonBoundsAirportSearchParams {
   return {
     maxLatitude: geoRegion.northEast.lat_decimal,
     minLatitude: geoRegion.southWest.lat_decimal,
