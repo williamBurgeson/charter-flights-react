@@ -1,0 +1,50 @@
+[
+  {
+    "code": "AF",
+    "name": "Africa",
+    "minLat": -34.854166666666664,
+    "maxLat": 37.53333333333333,
+    "minLon": -25.416666666666668,
+    "maxLon": 63.5
+  },
+  {
+    "code": "AS",
+    "name": "Asia",
+    "minLat": -11.0,
+    "maxLat": 81.86666666666667,
+    "minLon": 26.066666666666666,
+    "maxLon": 180
+  },
+  {
+    "code": "EU",
+    "name": "Europe",
+    "minLat": 34.80055555555555,
+    "maxLat": 81.80666666666666,
+    "minLon": -31.275,
+    "maxLon": 69.03333333333333
+  },
+  {
+    "code": "NA",
+    "name": "North America",
+    "minLat": 5.518888888888889,
+    "maxLat": 83.66666666666667,
+    "minLon": -179.15,
+    "maxLon": -11.489444444444445
+  },
+  {
+    "code": "OC",
+    "name": "Oceania",
+    "minLat": -50.7,
+    "maxLat": 28.416666666666668,
+    "minLon": 113.08333333333333,
+    "maxLon": 180
+  },
+  {
+    "code": "SA",
+    "name": "South America",
+    "minLat": -55.980572161440634,
+    "maxLat": 15.884166666666667,
+    "minLon": -92.00916666666667,
+    "maxLon": -28.8475
+  }
+]

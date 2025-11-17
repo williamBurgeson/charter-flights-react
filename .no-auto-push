@@ -1,0 +1,7 @@
+DO NOT PUSH AUTOMATICALLY
+
+This repository contains a marker file to indicate that automated agents should
+not attempt to push changes to any remote without explicit human permission.
+
+Policy: Do not run `git push` or allow tools to push unless you intentionally
+remove this file or explicitly allow the push (see .git/hooks/pre-push).
