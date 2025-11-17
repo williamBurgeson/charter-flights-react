@@ -3,7 +3,6 @@
   "homepage": "https://willialburgeson.github.io/charter-flights-react/",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://williamburgeson.github.io/charter-flights-react",
   "type": "module",
   "scripts": {
     "dev": "vite",
