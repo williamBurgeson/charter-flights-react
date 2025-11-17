@@ -1,11 +1,28 @@
 import { useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import useFlightQueryParams from '../../hooks/useFlightQueryParams'
+import type { FlightQuery } from '../../hooks/useFlightQueryParams'
 import type { FlightSearchResult, FlightSearchParams } from '../../hooks/useFlightSearch'
 
 type Props = {
   searchResults?: FlightSearchResult | null
   searchParams?: FlightSearchParams | null
+}
+
+// Return a canonical string to use for the departFrom query param when
+// navigating from other pages into /flight-search. Prefer the component
+// supplied FlightSearchParams.departureDateFrom (a Date). Otherwise fall
+// back to the parsed query's departFrom value. Convert symbolic 'now'
+// into a concrete ISO timestamp at navigation time.
+function getCanonicalDepartFrom(q?: FlightQuery | null, searchParams?: FlightSearchParams | null): string | undefined {
+
+
+
+  if (searchParams?.departureDateFrom) return (searchParams.departureDateFrom as Date).toISOString()
+  const df = q?.departFrom
+  if (!df) return undefined
+  if (df === 'now') return new Date().toISOString()
+  return String(df)
 }
 
 export default function FlightResultsFooterComponent({ searchResults, searchParams }: Props) {
@@ -23,29 +40,19 @@ export default function FlightResultsFooterComponent({ searchResults, searchPara
     (targetPage: number) => {
       const q = getQuery()
       // If we're already on the flight-search route, just update the query
-      if (location.pathname === '/flight-search') {
-        setQuery({ page: targetPage })
-        return
-      }
+      // if (location.pathname === '/flight-search') {
+      //   setQuery({ page: targetPage })
+      //   return
+      // }
       // otherwise build a search string from explicitly supplied values and navigate
       // ensure we carry the canonical departFrom value so the target page uses
       // the same temporal anchor (prevents showing already-departed flights)
       const sp = new URLSearchParams()
       const explicit = q?.explicitlySuppliedValues ?? {}
       for (const [k, v] of Object.entries(explicit)) sp.set(k, v)
-      // if caller provided searchParams (FlightSearchParams), prefer its
-      // departureDateFrom as the canonical anchor (it's a Date). Otherwise
-      // fall back to the parsed query's departFrom (string or 'now').
-      if (searchParams?.departureDateFrom && !sp.has('departFrom')) {
-        sp.set('departFrom', (searchParams.departureDateFrom as Date).toISOString())
-      } else if (q?.departFrom && !sp.has('departFrom')) {
-        const df = String(q.departFrom)
-        if (df === 'now') {
-          sp.set('departFrom', new Date().toISOString())
-        } else {
-          sp.set('departFrom', df)
-        }
-      }
+      // set departFrom using helper
+      const canonicalDepartFrom = getCanonicalDepartFrom(q, searchParams)
+      if (canonicalDepartFrom && !sp.has('departFrom')) sp.set('departFrom', canonicalDepartFrom)
       sp.set('page', String(targetPage))
       sp.set('tab', 'results')
       navigate({ pathname: '/flight-search', search: `?${sp.toString()}` })

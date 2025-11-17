@@ -36,10 +36,10 @@ export default function FlightSearchResultsComponent() {
   const Page_Load = useCallback(() => {
     const doPage_Load = async() => {
       const snapshot = getQuery()
-    const fsParams = applyQueryParams(snapshot as FlightQuery)
-    setActiveSearchParams(fsParams)
-    const results = await searchFlights(fsParams)
-    setFlightsToDisplay(() => results)
+      const fsParams = applyQueryParams(snapshot as FlightQuery)
+      setActiveSearchParams(fsParams)
+      const results = await searchFlights(fsParams)
+      setFlightsToDisplay(() => results)
     }
     doPage_Load()
   }, [getQuery, applyQueryParams, searchFlights])
