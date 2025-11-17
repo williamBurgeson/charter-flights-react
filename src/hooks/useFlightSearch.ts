@@ -11,6 +11,8 @@ export interface FlightSearchParams {
   arrivalDateTo?: Date;
   itemsFromBeginning?: number;
   itemsFromEnd?: number;
+  pageIndex?: number;
+  pageSize?: number;
 }
 
 export function useFlightSearch() {
@@ -56,6 +58,13 @@ export function useFlightSearch() {
       const itemsFromEnd = params.itemsFromEnd;
       candidateFlights = candidateFlights.slice(0 - itemsFromEnd);
     }
+
+    if (params.pageIndex !== undefined && params.pageSize !== undefined) {
+      const start = params.pageIndex * params.pageSize;
+      const end = start + params.pageSize;
+      candidateFlights = candidateFlights.slice(start, end);
+    }
+    
     return candidateFlights;
   }, [searchAirports, filterByAirportCodes]);
 

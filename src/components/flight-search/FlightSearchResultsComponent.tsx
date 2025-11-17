@@ -1,8 +1,8 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 import useFlightQueryParams from '../../hooks/useFlightQueryParams'
 import type { Flight } from '../../models/flight.model'
-import type { FlightSearchParams } from '../../hooks/useFlightSearch'
-import type { FlightQueryWithSupplied } from '../../hooks/useFlightQueryParams'
+import { useFlightSearch, type FlightSearchParams } from '../../hooks/useFlightSearch'
+import type { FlightQuery } from '../../hooks/useFlightQueryParams'
 import './FlightSearchResultsComponent.css'
 
 type Props = {
@@ -13,45 +13,75 @@ type Props = {
 
 export default function FlightSearchResultsComponent({ flights = [], onSelect, className = '' }: Props) {
   // read the query (includes explicitlySuppliedValues) so we can inspect it
-  const { query } = useFlightQueryParams()
-
-  // Convert query (which includes explicitlySuppliedValues) into FlightSearchParams
-  const applyQueryParams = (snapshot: FlightQueryWithSupplied): FlightSearchParams => {
-
-    // default to page 1, perPage 8
-    snapshot.page = snapshot.page ?? 1
-    snapshot.perPage = snapshot.perPage ?? 8
-
-
-
-
-    // const parseDate = (s?: string) => {
-    //   if (!s) return undefined
-    //   const d = new Date(s)
-    //   return Number.isNaN(d.getTime()) ? undefined : d
-    // }
-    // const makeAirportParams = (val?: string) => {
-    //   if (!val) return undefined
-    //   const codes = val.split(',').map((c) => c.trim()).filter(Boolean)
-    //   if (!codes.length) return undefined
-    //   return { airportCodes: codes }
-    // }
-    const params: FlightSearchParams = {}
-    // if (snapshot.origin) params.airportFromSearchParams = makeAirportParams(snapshot.origin)
-    // if (snapshot.dest) params.airportToSearchParams = makeAirportParams(snapshot.dest)
-    // if (snapshot.departFrom) params.departureDateFrom = parseDate(snapshot.departFrom)
-    // if (snapshot.departTo) params.departureDateTo = parseDate(snapshot.departTo)
-    // if (snapshot.returnFrom) params.arrivalDateFrom = parseDate(snapshot.returnFrom)
-    // if (snapshot.returnTo) params.arrivalDateTo = parseDate(snapshot.returnTo)
-    // const perPage = snapshot.perPage ? Number(snapshot.perPage) : undefined
-    // if (perPage && Number.isFinite(perPage) && perPage > 0) {
-    //   params.itemsFromBeginning = perPage
-    // }
-    return params
-  }
+  const { getQuery } = useFlightQueryParams()
 
   // Keep a ref to the last-seen query so we can compare current vs incoming
-  const lastQueryRef = useRef<FlightQueryWithSupplied | null>(null)
+  const lastQueryRef = useRef<FlightQuery | null>(null)
+  // Keep a timestamp of when we last recorded the query snapshot. This lets
+  // us expire old snapshots (see timeout logic below).
+  const lastQueryAtRef = useRef<number | null>(null)
+  const { searchFlights } = useFlightSearch()
+  
+  const [searchParams, setSearchParams] = useState<FlightSearchParams | null>(null)
+  const [flightsToDisplay, setFlightsToDisplay] = useState<Flight[]>([])
+
+  // timeout in minutes after which a previous snapshot is considered stale
+  const TIMEOUT_MINUTES = 10
+  const TIMEOUT_MS = TIMEOUT_MINUTES * 60 * 1000
+
+  // Convert query (which includes explicitlySuppliedValues) into FlightSearchParams
+  const applyQueryParams = useCallback((snapshot: FlightQuery): FlightSearchParams => {
+
+    const prev = lastQueryRef.current as FlightQuery | null
+    let isPaginationOnlyChange = false
+    const now = Date.now()
+
+    
+
+    if (prev && lastQueryAtRef.current) {
+      const age = now - lastQueryAtRef.current
+      if (age <= TIMEOUT_MS) {
+        // recent enough — allow comparator to decide
+        isPaginationOnlyChange = checkIsPaginationOnlyChange(prev, snapshot)
+      } else {
+        // expired: treat as a new query (do not preserve snapshot)
+        console.debug('FlightSearchResultsComponent — previous query snapshot expired (ms):', age)
+        isPaginationOnlyChange = false
+      }
+      console.debug('FlightSearchResultsComponent — isPaginationOnlyChange:', isPaginationOnlyChange)
+    }
+
+    const snapshotToSave = { ...snapshot, explicitlySuppliedValues: { ...snapshot.explicitlySuppliedValues } }
+
+    if (isPaginationOnlyChange) { 
+      snapshotToSave.departFrom = 
+        snapshot.departFrom = prev!.departFrom
+    }
+
+    // update last seen snapshot and timestamp
+    lastQueryRef.current = snapshotToSave
+    lastQueryAtRef.current = now
+
+    // right we've got those comparisons and saving of state out of the way, proceed to build params
+
+    // at this moment we only care about page/pageSize for pagination
+    // we will enhance the params when building out full search support
+
+    const params: FlightSearchParams = {}
+
+    if (snapshot.pageSize === undefined) {
+      snapshot.pageSize = 8
+    }
+    if (snapshot.page === undefined) {
+      snapshot.page = 1
+    }
+
+    params.pageIndex = snapshot.page - 1
+    params.pageSize = snapshot.pageSize
+    params.departureDateFrom = new Date(snapshot.departFrom!)
+
+    return params
+  }, [TIMEOUT_MS])
 
   /**
    * Determine whether a transition from `prev` -> `next` should be
@@ -61,7 +91,7 @@ export default function FlightSearchResultsComponent({ flights = [], onSelect, c
    *    a) the only change is the page number, OR
    *    b) the only change is departFrom transitioning from a concrete value -> blank
    */
-  const checkIsPaginationOnlyChange = (prev: FlightQueryWithSupplied, next: FlightQueryWithSupplied): boolean => {
+  const checkIsPaginationOnlyChange = (prev: FlightQuery, next: FlightQuery): boolean => {
     const excluded = new Set(['departFrom', 'page', 'tab', 'explicitlySuppliedValues'])
 
     // collect all keys present on either object
@@ -97,47 +127,81 @@ export default function FlightSearchResultsComponent({ flights = [], onSelect, c
   // Page_Load: run initialization side-effects once on mount
   const Page_Load = useCallback(() => {
     // small hook point for initialization (analytics, focus, debug)
-    const snapshot = query
-    const explicit = query.explicitlySuppliedValues
-    const fsParams = applyQueryParams(snapshot as FlightQueryWithSupplied)
-    console.debug('FlightSearchResultsComponent Page_Load — query snapshot:', snapshot)
-    console.debug('FlightSearchResultsComponent Page_Load — explicitlySuppliedValues:', explicit)
-    console.debug('FlightSearchResultsComponent Page_Load — derived FlightSearchParams:', fsParams)
-  }, [query])
+    const doPqge_Load = async() => {
+      const snapshot = getQuery()
+      const fsParams = applyQueryParams(snapshot as FlightQuery)
+
+      setSearchParams(fsParams)
+      const results = await searchFlights(fsParams)
+      setFlightsToDisplay(() => results)
+    }
+    doPqge_Load()
+  }, [getQuery, applyQueryParams, searchFlights])
 
   useEffect(() => {
     Page_Load()
     // compare incoming query to last seen and log whether it's pagination-only
-    const prev = lastQueryRef.current
-    let isPaginationOnlyChange = false
-    if (prev) {
-      isPaginationOnlyChange = checkIsPaginationOnlyChange(prev, query as FlightQueryWithSupplied)
-      console.debug('FlightSearchResultsComponent — isPaginationOnlyChange:', isPaginationOnlyChange)
-    }
-    // update last seen
-    lastQueryRef.current = query as FlightQueryWithSupplied
     // run only once on mount (Page_Load is stable via useCallback)
-  }, [Page_Load, query])
-  if (!flights || flights.length === 0) {
-    return <div className={`flight-search-results ${className}`}>No flights</div>
+  }, [Page_Load, TIMEOUT_MS])
+
+  // if (!flights || flights.length === 0) {
+  //   return <div className={`flight-search-results ${className}`}>No flights</div>
+  // }
+
+  // Quick helper to shorten verbose airport names in the UI.
+  // Rules applied:
+  // - Replace the whole-word "International" anywhere (case-insensitive) with "Intl."
+  // - Truncate any single word longer than 15 characters to first 15 chars + '.'
+  const shortenAirportName = (name: string) => {
+    if (!name) return name
+    // Replace International anywhere
+    const replaced = name.replace(/\bInternational\b/gi, 'Intl.')
+    // Truncate overly long words
+    const words = replaced.split(/(\s+)/) // keep whitespace tokens so we preserve original spacing
+    return words
+      .map((w) => {
+        // leave whitespace unchanged
+        if (/^\s+$/.test(w)) return w
+        // if word length > 15, truncate
+        if (w.length > 15) return w.slice(0, 15) + '.'
+        return w
+      })
+      .join('')
+  }
+
+  // Simple date formatter: DD/MM/YYYY HH:mm (24-hour)
+  const formatDateShort = (d: Date) => {
+    if (!d) return ''
+    const day = String(d.getDate()).padStart(2, '0')
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const year = String(d.getFullYear())
+    const hours = String(d.getHours()).padStart(2, '0')
+    const minutes = String(d.getMinutes()).padStart(2, '0')
+    return `${day}/${month}/${year} ${hours}:${minutes}`
   }
 
   return (
     <div className={`flight-search-results ${className}`}>
-      <ul>
-        {flights.map((f) => (
-          <li key={String(((f as unknown) as Record<string, unknown>).id ?? f.code)} className="flight-search-result-item" onClick={() => onSelect?.(f)}>
-            <div className="flight-row-left">
-              <div className="flight-code">{f.code}</div>
-              <div className="flight-name">{f.name}</div>
+      {flightsToDisplay.map((flight, index) => {
+        return (
+          <div key={index} className="table-row">
+            <div className="airport">
+              <div className="airport-code">{flight.originAirportCode}</div>
+              <div className="airport-name">{shortenAirportName(flight.originAirportName)}</div>
             </div>
-            <div className="flight-row-right">
-              <div className="flight-route">{f.originAirportCode} → {f.destinationAirportCode}</div>
-              <div className="flight-times">{new Date(f.departureTime).toLocaleString()} — {new Date(f.arrivalTime).toLocaleString()}</div>
+            <div className="date">{formatDateShort(flight.departureTime)}</div>
+            <div className="airport dest">
+              <div className="airport-code">{flight.destinationAirportCode}</div>
+              <div className="airport-name">{shortenAirportName(flight.destinationAirportName)}</div>
             </div>
-          </li>
-        ))}
-      </ul>
+          </div>
+        )
+      })}
+      <div className="pagination">
+        <span className="arrow">&laquo;</span>
+        Displaying 1–10 of 75
+        <span className="arrow">&raquo;</span>
+      </div>
     </div>
   )
 }

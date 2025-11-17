@@ -9,16 +9,13 @@ export type FlightQuery = {
   departTo?: string // ISO date YYYY-MM-DD
   returnFrom?: string // ISO date YYYY-MM-DD
   returnTo?: string // ISO date YYYY-MM-DD
-  adults?: number
   page?: number
-  perPage?: number
+  pageSize?: number
   sort?: string
   tab?: 'criteria' | 'results'
-}
-
-export type FlightQueryWithSupplied = FlightQuery & {
   explicitlySuppliedValues: Record<string, string>
 }
+
 
 const toNumber = (v: string | null | undefined, fallback?: number) => {
   if (!v) return fallback
@@ -27,16 +24,21 @@ const toNumber = (v: string | null | undefined, fallback?: number) => {
 }
 
 const parseParams = (sp: URLSearchParams): FlightQuery => {
-  const q: FlightQuery = {}
+
+  const explicitlySuppliedValues: Record<string, string> = {}
+  for (const [k, v] of Array.from(sp.entries())) {
+    explicitlySuppliedValues[k] = v
+  }    
+
+  const q: FlightQuery = { explicitlySuppliedValues : explicitlySuppliedValues }
   const origin = sp.get('origin')
   const dest = sp.get('dest')
   const departFrom = sp.get('departFrom')
   const departTo = sp.get('departTo')
   const returnFrom = sp.get('returnFrom')
   const returnTo = sp.get('returnTo')
-  const adults = toNumber(sp.get('adults') ?? undefined)
   const page = toNumber(sp.get('page') ?? undefined)
-  const perPage = toNumber(sp.get('perPage') ?? undefined)
+  const pageSize = toNumber(sp.get('pageSize') ?? undefined)
   const sort = sp.get('sort') ?? undefined
   const tab = (sp.get('tab') as FlightQuery['tab']) ?? undefined
 
@@ -46,9 +48,8 @@ const parseParams = (sp: URLSearchParams): FlightQuery => {
   if (departTo) q.departTo = departTo
   if (returnFrom) q.returnFrom = returnFrom
   if (returnTo) q.returnTo = returnTo
-  if (adults !== undefined) q.adults = adults
   if (page !== undefined) q.page = page
-  if (perPage !== undefined) q.perPage = perPage
+  if (pageSize !== undefined) q.pageSize = pageSize
   if (sort) q.sort = sort
   if (tab) q.tab = tab
   return q
@@ -62,9 +63,8 @@ const serialize = (q: FlightQuery): URLSearchParams => {
   if (q.departTo) sp.set('departTo', q.departTo)
   if (q.returnFrom) sp.set('returnFrom', q.returnFrom)
   if (q.returnTo) sp.set('returnTo', q.returnTo)
-  if (q.adults !== undefined) sp.set('adults', String(q.adults))
   if (q.page !== undefined) sp.set('page', String(q.page))
-  if (q.perPage !== undefined) sp.set('perPage', String(q.perPage))
+  if (q.pageSize !== undefined) sp.set('pageSize', String(q.pageSize))
   if (q.sort) sp.set('sort', q.sort)
   if (q.tab) sp.set('tab', q.tab)
   return sp
@@ -83,7 +83,9 @@ export function useFlightQueryParams() {
     return obj
   }, [searchParams])
 
-  const query: FlightQueryWithSupplied = useMemo(() => ({ ...parsed, explicitlySuppliedValues }), [parsed, explicitlySuppliedValues])
+  const query: FlightQuery = useMemo(() => ({ ...parsed, explicitlySuppliedValues }), [parsed, explicitlySuppliedValues])
+
+  const getQuery = useCallback(() => { return query }, [query])
 
   /**
    * Update query params by merging partial changes. By default this uses
@@ -103,7 +105,7 @@ export function useFlightQueryParams() {
 
   const resetQuery = useCallback(() => setSearchParams(new URLSearchParams(), { replace: false }), [setSearchParams])
 
-  return { query, setQuery, applyQuery, resetQuery }
+  return { getQuery, setQuery, applyQuery, resetQuery }
 }
 
 export default useFlightQueryParams
