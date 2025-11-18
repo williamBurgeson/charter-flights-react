@@ -11,14 +11,17 @@ export default function AppRouter({ suspenseResource }: { suspenseResource: Susp
   // suspend the router until seeding completes
   suspenseResource.read()
 
+  console.log('AppRouter rendering with base href:', location.href)
+
   return (
     <Routes>
-      <Route index element={<HomePage />} />
-      <Route path="/map" element={<MapPage />} />
-      <Route path="/airports" element={<AirportSearchPage />} />
-  <Route path="/flight-search" element={<FlightSearchPage />} />
+      <Route path={`/`} index element={<HomePage />} />
+      <Route path={`/map`} element={<MapPage />} />
+      <Route path={`/airports`} element={<AirportSearchPage />} />
+      <Route path={`/flight-search`} element={<FlightSearchPage />} />
+      <Route path={`/empty`} element={<EmptyPage />} />
+      <Route path="/*`}" element={<NotFoundPage />} />
       <Route path="*" element={<NotFoundPage />} />
-      <Route path="/empty" element={<EmptyPage />} />
     </Routes>
   )
 }

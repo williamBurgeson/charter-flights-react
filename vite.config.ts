@@ -3,7 +3,6 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/charter-flights-react',
   plugins: [
     react({
       babel: {
@@ -11,4 +10,5 @@ export default defineConfig({
       },
     }),
   ],
+  base: '/charter-flights-react',
 })

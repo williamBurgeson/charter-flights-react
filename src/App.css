@@ -160,7 +160,7 @@ header {
    to the presence of the .content element. */
 .content {
   /* world relief / satellite map background */
-  background-image: url('world-relief-satellite-map.png');
+  background-image: url('./world-relief-satellite-map.png');
   background-repeat: repeat-y;
   /* keep the original horizontal offset but pin vertical origin to 0 */
   background-position: calc(50% + var(--x-offset, 0px)) 0px;
@@ -183,21 +183,21 @@ header {
 
 @media (max-width: 900px) {
   .content {
-    background-image: url('world-relief-satellite-map-smaller.png');
+    background-image: url('./world-relief-satellite-map-smaller.png');
     background-size: 770px auto;
   }
 }
 
 @media (prefers-reduced-data: reduce) {
   .content {
-    background-image: url('world-relief-satellite-map-smallest.png');
+    background-image: url('./world-relief-satellite-map-smallest.png');
     background-size: auto 800px;
   }
 }
 
 @media (prefers-reduced-data: reduce) and (max-width: 900px) {
   .content {
-    background-image: url('world-relief-satellite-map-smallest.png');
+    background-image: url('./world-relief-satellite-map-smallest.png');
     background-size: 770px auto;
   }
 }

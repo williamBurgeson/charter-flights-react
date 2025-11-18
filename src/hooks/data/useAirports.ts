@@ -2,6 +2,6 @@ import type { Airport } from "../../models/airport.model";
 import { makeGenericAccessorHook } from "./makeGenericAccessorHook";
 
 export const useAirports = makeGenericAccessorHook<Airport>(
-	"/airports.json",
+	`${location.href}airports.json`,
 	{ uniqueKeys: ["code", "name"], nonUniqueKeys: ["country", "city"] }
 );

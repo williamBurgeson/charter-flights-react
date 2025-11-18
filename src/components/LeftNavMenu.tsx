@@ -10,12 +10,12 @@ import { useTheme } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery'
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Home' },
-  { to: '/map', label: 'Map' },
-  { to: '/airports', label: 'Airports' },
-  { to: '/flight-search?departFrom=now&page=1&pageSize=6', label: 'Flight Search' },
-  { to: '/settings', label: 'Settings' },
-  { to: '/empty', label: 'Empty' },
+  { to:  `${location.href}`, label: 'Home' },
+  { to: `${location.href}map`, label: 'Map' },
+  { to: `${location.href}airports`, label: 'Airports' },
+  { to: `${location.href}flight-search?departFrom=now&page=1&pageSize=6`, label: 'Flight Search' },
+  { to: `${location.href}settings`, label: 'Settings' },
+  { to: `${location.href}empty`, label: 'Empty' },
 ]
 
 export default function LeftNavMenu({ open, onClose }: { open: boolean; onClose: () => void }) {

@@ -1,3 +1,7 @@
+import './assets/plane-in-sky.png'
+import './assets/world-relief-satellite-map.png'
+import './assets/world-relief-satellite-map-smaller.png'
+import './assets/world-relief-satellite-map-smallest.png'
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import './App.css'
 
@@ -34,10 +38,10 @@ function App() {
 
   return (
     <>
-    <BrowserRouter>
-  <LeftNavMenu open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+    <BrowserRouter basename='/charter-flights-react'>
+      <LeftNavMenu open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
-  <header className="app-header" style={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}>
+      <header className="app-header" style={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}>
        <div className="header-spacer header-spacer-left" />
        <div className="content-align-outer">
        {/* show hamburger on mobile only */}
