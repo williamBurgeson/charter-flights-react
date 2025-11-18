@@ -15,7 +15,7 @@
 }
 .current-position-selector .na-inputs {
   display: flex;
-  gap: 0.6rem;
+  gap: 8px;
   flex: 1 1 auto;
   min-width: 0; /* allow children to shrink properly */
   align-items: center;
@@ -23,16 +23,16 @@
 .current-position-selector .na-field {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.5rem;
   flex: 1 1 220px;
-  min-width: 120px;
+  /* min-width: 80px; */
 }
 .current-position-selector .na-field-label {
   font-size: 0.85rem;
   color: #444;
 }
 .current-position-selector .na-coord-input {
-  width: 35px;
+  width: 45px;
   padding: 0.25rem 0.4rem;
   border: 1px solid #ccc;
   border-radius: 3px;
@@ -47,6 +47,7 @@
   cursor: pointer;
   margin-left: auto;
   flex: 0 0 auto;
+  min-width: 80px;
 }
 
 @media (max-width: 560px) {
@@ -64,7 +65,7 @@
     order: 2;
     width: 100%;
     display: flex;
-    gap: 0.5rem;
+    gap: 8px;
     flex-direction: row;
   }
 
