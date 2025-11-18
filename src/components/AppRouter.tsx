@@ -11,6 +11,8 @@ export default function AppRouter({ suspenseResource }: { suspenseResource: Susp
   // suspend the router until seeding completes
   suspenseResource.read()
 
+  console.log('AppRouter rendering with base href:', location.href)
+
   return (
     <Routes>
       <Route path={`${location.href}`} index element={<HomePage />} />

@@ -1,3 +1,7 @@
+import './assets/plane-in-sky.png'
+import './assets/world-relief-satellite-map.png'
+import './assets/world-relief-satellite-map-smaller.png'
+import './assets/world-relief-satellite-map-smallest.png'
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import './App.css'
 
