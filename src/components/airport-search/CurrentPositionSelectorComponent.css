@@ -32,7 +32,7 @@
   color: #444;
 }
 .current-position-selector .na-coord-input {
-  width: 45px;
+  width: 35px;
   padding: 0.25rem 0.4rem;
   border: 1px solid #ccc;
   border-radius: 3px;
@@ -58,7 +58,8 @@
 
   /* keep title and button on the first row */
   .current-position-selector .na-label { order: 0 }
-  .current-position-selector .na-change-btn { order: 1; margin-left: 0; align-self: center }
+  /* keep the Change button docked to the right on the first row */
+  .current-position-selector .na-change-btn { order: 1; margin-left: auto; align-self: center }
 
   /* inputs move to their own full-width row but remain side-by-side */
   .current-position-selector .na-inputs {
@@ -69,6 +70,7 @@
     flex-direction: row;
   }
 
+  /* make fields expand to fill the available width on the second row */
   .current-position-selector .na-field {
     flex: 1 1 0%;
     min-width: 0;
