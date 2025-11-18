@@ -15,12 +15,12 @@ export default function AppRouter({ suspenseResource }: { suspenseResource: Susp
 
   return (
     <Routes>
-      <Route path={`${location.href}`} index element={<HomePage />} />
+      <Route path={`/`} index element={<HomePage />} />
       <Route path={`/map`} element={<MapPage />} />
-      <Route path={`${location.href}airports`} element={<AirportSearchPage />} />
-      <Route path={`${location.href}flight-search`} element={<FlightSearchPage />} />
-      <Route path={`${location.href}empty`} element={<EmptyPage />} />
-      <Route path="{`${location.href}*`}" element={<NotFoundPage />} />
+      <Route path={`/airports`} element={<AirportSearchPage />} />
+      <Route path={`/flight-search`} element={<FlightSearchPage />} />
+      <Route path={`/empty`} element={<EmptyPage />} />
+      <Route path="/*`}" element={<NotFoundPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
