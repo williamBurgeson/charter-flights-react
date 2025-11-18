@@ -7,7 +7,7 @@ export default function NotFoundTemp() {
         <h1>Page not found (temp)</h1>
         <p>The route you requested could not be found.</p>
         <nav>
-          <Link to="/">Go home</Link>
+          <Link to={`${location.href}`}>Return to home page</Link>
         </nav>
       </div>
     </div>
