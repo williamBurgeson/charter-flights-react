@@ -10,5 +10,5 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/charter-flights-react',
+ // base: '/charter-flights-react',
 })

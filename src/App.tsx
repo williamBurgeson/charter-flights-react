@@ -36,9 +36,12 @@ function App() {
     }
   }, [triggerSeed, flightSeederResource])
 
+  //const basename = '/charter-flights-react'
+  const basename = ''
+
   return (
     <>
-    <BrowserRouter basename='/charter-flights-react'>
+    <BrowserRouter basename={basename}>
       <LeftNavMenu open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
       <header className="app-header" style={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}>
