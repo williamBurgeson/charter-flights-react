@@ -6,15 +6,26 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   background: #fff;
+  flex-wrap: nowrap;
 }
 .current-position-selector .na-label {
   font-weight: 600;
   margin-right: 0.25rem;
+  flex: 0 0 auto;
+}
+.current-position-selector .na-inputs {
+  display: flex;
+  gap: 0.6rem;
+  flex: 1 1 auto;
+  min-width: 0; /* allow children to shrink properly */
+  align-items: center;
 }
 .current-position-selector .na-field {
   display: flex;
   align-items: center;
   gap: 0.3rem;
+  flex: 1 1 220px;
+  min-width: 120px;
 }
 .current-position-selector .na-field-label {
   font-size: 0.85rem;
@@ -26,6 +37,7 @@
   border: 1px solid #ccc;
   border-radius: 3px;
   font-size: 0.95rem;
+  box-sizing: border-box;
 }
 .current-position-selector .na-change-btn {
   padding: 0.35rem 0.6rem;
@@ -33,4 +45,31 @@
   border: 1px solid #777;
   background: #f6f6f6;
   cursor: pointer;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 560px) {
+  .current-position-selector {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* keep title and button on the first row */
+  .current-position-selector .na-label { order: 0 }
+  .current-position-selector .na-change-btn { order: 1; margin-left: 0; align-self: center }
+
+  /* inputs move to their own full-width row but remain side-by-side */
+  .current-position-selector .na-inputs {
+    order: 2;
+    width: 100%;
+    display: flex;
+    gap: 0.5rem;
+    flex-direction: row;
+  }
+
+  .current-position-selector .na-field {
+    flex: 1 1 0%;
+    min-width: 0;
+  }
 }
