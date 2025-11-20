@@ -11,7 +11,7 @@
   height: 100%;
 }
 
-.airport-search-tab-panel-component > .MuiBox-root {
+.airport-search-tab-panel-component .airport-search-tab-panel-box {
   display: flex;
   flex-direction: column;
   height: 100%;
