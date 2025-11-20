@@ -13,15 +13,17 @@ export default function CurrentPositionSelectorComponent() {
       <div className="na-label">Location:</div>
 
       <div className="na-inputs">
-        <label className="na-field">
+        <label className="na-field na-field-left">
           <span className="na-field-label">Lat:</span>
           <input className="na-coord-input" type="text" defaultValue={''} aria-label="Latitude" />°{northSouth()}
         </label>
 
-        <label className="na-field">
+        <label className="na-field na-field-right">
           <span className="na-field-label">Lon:</span>
           <input className="na-coord-input" type="text" defaultValue={''} aria-label="Longitude" />°{eastWest()}
         </label>
+
+        <div className="na-inputs-spacer" />
       </div>
 
       <button type="button" className="na-change-btn">Change</button>

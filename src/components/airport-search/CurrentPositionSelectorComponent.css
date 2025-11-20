@@ -27,6 +27,10 @@
   flex: 1 1 220px;
   /* min-width: 80px; */
 }
+
+.current-position-selector .na-inputs-spacer {
+  display: none;
+}
 .current-position-selector .na-field-label {
   font-size: 0.85rem;
   color: #444;
@@ -50,7 +54,7 @@
   min-width: 80px;
 }
 
-@media (max-width: 560px) {
+@media (max-width: 590px) {
   .current-position-selector {
     flex-wrap: wrap;
     gap: 0.5rem;
@@ -64,15 +68,37 @@
   /* inputs move to their own full-width row but remain side-by-side */
   .current-position-selector .na-inputs {
     order: 2;
-    width: 100%;
+    /* extend the inputs row to the inner edges by compensating for the parent's horizontal padding */
+    width: calc(100% + 1.2rem);
+    margin-left: -0.6rem;
+    margin-right: -0.6rem;
     display: flex;
-    gap: 8px;
+    gap: 18px;
     flex-direction: row;
   }
 
   /* make fields expand to fill the available width on the second row */
   .current-position-selector .na-field {
-    flex: 1 1 0%;
     min-width: 0;
+    box-sizing: border-box;
+    justify-content: left;
+    flex-basis: 1;
   }
+
+  /* .current-position-selector .na-inputs-spacer {
+    display: block;
+    min-width: 50px;
+    flex-basis: 4;
+  } */
+
+  /* give explicit half-widths (minus gap) so the right field reaches the inner right edge */
+
+  .current-position-selector .na-field-right {
+    float: right;
+  }
+
+  /* ensure the right-field content doesn't introduce extra spacing */
+  .current-position-selector .na-field-right { text-align: left }
+
+
 }
