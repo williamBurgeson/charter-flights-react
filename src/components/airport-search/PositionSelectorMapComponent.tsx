@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useMemo } from 'react'
-import LeafletMapHostComponent, { type MapBoundsPayload } from '../LeafletMapHostComponent'
+import { useCallback } from 'react'
+import LeafletMapHostComponent, { type MapClickPayload } from '../LeafletMapHostComponent'
 import type { GeoPoint } from '../../models/geo-types'
 
 export type PositionSelectPayload = {
@@ -9,21 +9,26 @@ export type PositionSelectPayload = {
 
 export default function PositionSelectorMapComponent({ onPositionSelected }: { onPositionSelected?: (p: PositionSelectPayload) => void } = {}) {
 
-  const centerRef = useRef<{ lat_decimal: number; lon_decimal: number } | null>(null)
-
-  const handleMapUpdated = useCallback(async (b: MapBoundsPayload) => {
-    console.log('PositionSelectorMapComponent: bounds changed', b)
+  // Called when the Leaflet host reports a map click. Notify parent via
+  // `onPositionSelected` if provided. The event is optional for consumers.
+  const handleMapClick = useCallback((p: MapClickPayload) => {
     try {
-      // Store center for caller debugging / current position usage
-      centerRef.current = b.center
+      console.log('PositionSelectorMapComponent: map click received', p)
+      try {
+        if (typeof onPositionSelected === 'function') {
+          onPositionSelected({ positionSelected: { lat_decimal: p.lat, lon_decimal: p.lon }, selectedAt: new Date().toISOString() })
+        }
+      } catch (pf) {
+        console.error('PositionSelectorMapComponent: onPositionSelected handler threw', pf)
+      }
     } catch (e) {
-      console.error('PositionSelectorMapComponent: failed to get continents for bounds', e)
+      console.error('PositionSelectorMapComponent: error handling map click', e)
     }
-  }, [])
+  }, [onPositionSelected])
 
   return (
     <div className="position-selector-map-component">
-      <LeafletMapHostComponent mapUpdatedEvent={handleMapUpdated} />
+      <LeafletMapHostComponent onMapClick={handleMapClick} />
     </div>
   )
 }
