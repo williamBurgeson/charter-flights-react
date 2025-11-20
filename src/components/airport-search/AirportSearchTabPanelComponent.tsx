@@ -15,7 +15,7 @@ export default function AirportSearchTabPanelComponent() {
   const [selectedTabIndex, setSelectedTabIndex] = useState(0)
   return (
     <div className="airport-search-tab-panel-component">
-      <Box>
+      <Box className="airport-search-tab-panel-box">
         <div className="tab-set">
           <Tabs value={selectedTabIndex} onChange={(_, v) => setSelectedTabIndex(v)} aria-label="example tabs" variant="scrollable" scrollButtons="auto">
             <Tab label="by Map" className="tab-header tab-header-left" />
@@ -24,17 +24,17 @@ export default function AirportSearchTabPanelComponent() {
           </Tabs>
         </div>
 
-  <TabPanel value={selectedTabIndex} index={0}>
+        <TabPanel value={selectedTabIndex} index={0}>
           <div className="airport-search-tab-panel-by-maps">
             <MapComponent />
           </div>
         </TabPanel>
-  <TabPanel value={selectedTabIndex} index={1}>
+        <TabPanel value={selectedTabIndex} index={1}>
           <div className="airport-search-tab-panel-by-territories">
             Search for airports by continent/territory... (coming soon)
           </div>
         </TabPanel>
-  <TabPanel value={selectedTabIndex} index={2}>
+        <TabPanel value={selectedTabIndex} index={2}>
           <div className="airport-search-tab-panel-from-point">
             <NearestAirportsTableComponent />
           </div>
