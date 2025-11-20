@@ -23,7 +23,7 @@
 .current-position-selector .na-field {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.1rem;
   flex: 1 1 220px;
   /* min-width: 80px; */
 }
@@ -36,8 +36,8 @@
   color: #444;
 }
 .current-position-selector .na-coord-input {
-  width: 35px;
-  padding: 0.25rem 0.4rem;
+  width:45px;
+  padding: 0.25rem 0;
   border: 1px solid #ccc;
   border-radius: 3px;
   font-size: 0.95rem;
