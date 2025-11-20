@@ -2,8 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import './CurrentPositionSelectorComponent.css'
 import { useDistanceCalculator } from '../../hooks/useDistanceCalculator'
 import PositionSelectorModalComponent from './PositionSelectorModaComponentl';
+import type { GeoPoint } from '../../models/geo-types';
 
-export default function CurrentPositionSelectorComponent() {
+export default function CurrentPositionSelectorComponent({
+  onPositionSelected,
+}: { 
+  onPositionSelected?: (p: GeoPoint | null) => void } = {}
+) {
   const defaultLatitude = 50.0;
   const defaultLongitude = 0.0;
   const [latitude, setLatitude] = useState(defaultLatitude)
@@ -20,6 +25,12 @@ export default function CurrentPositionSelectorComponent() {
 
   const northSouth = useCallback(() => latitude >= 0 ? 'N' : 'S', [latitude])
   const eastWest = useCallback(() => longitude >= 0 ? 'E' : 'W', [longitude])
+
+  const applySelection = () => {
+    const payload = { lat_decimal: latitude, lon_decimal: longitude }
+    onPositionSelected?.(payload)
+    setLocationSelected(true)
+  }
 
   useEffect(() => {
     async function fetchLocation() {
@@ -66,6 +77,8 @@ export default function CurrentPositionSelectorComponent() {
           setLatitude(payload.positionSelected.lat_decimal);
           setLongitude(payload.positionSelected.lon_decimal);
           setLocationSelected(true);
+          onPositionSelected?.(payload.positionSelected);
+          applySelection();
         }
         setModalIsOpen(false);
       }} 
