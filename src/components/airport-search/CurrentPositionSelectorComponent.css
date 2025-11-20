@@ -54,6 +54,14 @@
   min-width: 80px;
 }
 
+.na-location-unavailable {
+  margin-left: 1rem;
+  color: #c40;
+  font-size: 0.9rem;
+  font-weight: 500;
+  flex: 0 0 auto;
+}
+
 @media (max-width: 590px) {
   .current-position-selector {
     flex-wrap: wrap;
