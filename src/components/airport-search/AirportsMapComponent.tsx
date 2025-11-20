@@ -1,8 +1,8 @@
-import { useState, useRef, useCallback, useMemo } from 'react'
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import LeafletMapHostComponent, { type MapBoundsPayload, type MarkerSelectPayload } from '../LeafletMapHostComponent'
 import { useContinentSearch } from '../../hooks/useContinentSearch'
 import type { Continent } from '../../models/continent.model'
-import type { GeoRegion } from '../../models/geo-types'
+import type { GeoPoint, GeoRegion } from '../../models/geo-types'
 import { useAirportSearch } from '../../hooks/useAirportSearch'
 import { useAirports } from '../../hooks/data/useAirports'
 import type { Airport } from '../../models/airport.model'
@@ -14,13 +14,20 @@ export type AirportSelectPayload = {
   selectedAt: string // ISO timestamp
 }
 
-export default function AirportsMapComponent({ onSelectedAirport }: { onSelectedAirport?: (p: AirportSelectPayload) => void } = {}) {
+export default function AirportsMapComponent({ 
+  selectedCenter,
+  onSelectedAirport 
+}: { 
+  selectedCenter?: GeoPoint | null
+  onSelectedAirport?: (p: AirportSelectPayload) => void 
+} = {}) {
   const { findContinentsIntersectingRegion } = useContinentSearch()
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [/*continentsInView*/ _1, setContinentsInView] = useState<Continent[] | null>(null)
   const [airportsInView, setAirportsInView] = useState<Airport[]>([])
-  const centerRef = useRef<{ lat_decimal: number; lon_decimal: number } | null>(null)
+  const centerRef = useRef<GeoPoint| null>(null)
+  const [/*selectedCenterState*/, setSelectedCenterState] = useState<GeoPoint | null>(selectedCenter ?? null)
   const { searchAirports } = useAirportSearch()
 
   // Track last selection as React state — this is core behavior of the
@@ -38,6 +45,13 @@ export default function AirportsMapComponent({ onSelectedAirport }: { onSelected
   // fast.
   const airportCacheRef = useRef<Map<string, Airport | null>>(new Map())
   const { getByCode: getAirportByCode } = useAirports()
+
+  useEffect(() => {
+    if (selectedCenter !== null) {
+      setSelectedCenterState(selectedCenter!)
+      centerRef.current = selectedCenter!
+    }
+  }, [selectedCenter])
 
   const handleMapUpdated = useCallback(async (b: MapBoundsPayload) => {
     console.log('AirportsMapComponent: bounds changed', b)

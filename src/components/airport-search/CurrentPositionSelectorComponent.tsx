@@ -56,7 +56,9 @@ export default function CurrentPositionSelectorComponent() {
       {!locationAvailable && !locationSelected && (
         <div className="na-location-unavailable">Current location unavailable - defaulting to 50°N, 0°E</div>
       )}
-      <PositionSelectorModalComponent isOpen={modalIsOpen} onPositionSelected={(payload) => {
+      <PositionSelectorModalComponent isOpen={modalIsOpen} 
+          selectedCenter={{lat_decimal: latitude, lon_decimal: longitude}}
+          onPositionSelected={(payload) => {
         if (payload.positionSelected !== null) {
           setLatitude(payload.positionSelected.lat_decimal);
           setLongitude(payload.positionSelected.lon_decimal);

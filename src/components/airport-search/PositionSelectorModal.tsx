@@ -5,9 +5,11 @@ import { DialogContent, DialogTitle } from "@mui/material"
 
 export default function PositionSelectorModalComponent({
   isOpen = false,
+  selectedCenter,
   onPositionSelected
 }: {
   isOpen?: boolean,
+  selectedCenter?: GeoPoint | null,
   onPositionSelected?: (p: PositionSelectPayload) => void
 }) {
   const [open, setOpen] = useState(false) 
@@ -28,7 +30,7 @@ export default function PositionSelectorModalComponent({
       <Dialog open={open} onClose={() => setOpen(false)} aria-labelledby="demo-dialog-title">
         <DialogTitle id="demo-dialog-title">Please select a position on the map</DialogTitle>
         <DialogContent>
-          <PositionSelectorMapComponent onPositionSelected={handleMapSelect} />
+          <PositionSelectorMapComponent selectedCenter={selectedCenter} onPositionSelected={handleMapSelect} />
         </DialogContent>
       </Dialog>
     </div>

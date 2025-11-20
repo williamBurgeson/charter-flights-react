@@ -7,7 +7,13 @@ export type PositionSelectPayload = {
   selectedAt: string // ISO timestamp
 }
 
-export default function PositionSelectorMapComponent({ onPositionSelected }: { onPositionSelected?: (p: PositionSelectPayload) => void } = {}) {
+export default function PositionSelectorMapComponent({ 
+  selectedCenter,
+  onPositionSelected 
+}: { 
+  selectedCenter?: GeoPoint | null,
+  onPositionSelected?: (p: PositionSelectPayload) => void 
+} = {}) {
 
   // Called when the Leaflet host reports a map click. Notify parent via
   // `onPositionSelected` if provided. The event is optional for consumers.
@@ -28,7 +34,7 @@ export default function PositionSelectorMapComponent({ onPositionSelected }: { o
 
   return (
     <div className="position-selector-map-component">
-      <LeafletMapHostComponent onMapClick={handleMapClick} />
+      <LeafletMapHostComponent centerGeoPoint={selectedCenter} onMapClick={handleMapClick} />
     </div>
   )
 }
