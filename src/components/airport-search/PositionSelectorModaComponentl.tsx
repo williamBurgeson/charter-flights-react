@@ -7,17 +7,17 @@ import type { GeoPoint } from "../../models/geo-types"
 export default function PositionSelectorModalComponent({
   isOpen = false,
   selectedCenter,
-  onPositionSelected
+  selectedZoom,
+  onPositionSelected,
+  onZoomChanged
 }: {
   isOpen?: boolean,
   selectedCenter?: GeoPoint | null,
   selectedZoom?: number | null,
-  onPositionSelected?: (p: PositionSelectPayload) => void
+  onPositionSelected?: (p: PositionSelectPayload) => void,
+  onZoomChanged?: (z: { zoom: number }) => void
 }) {
   const [open, setOpen] = useState(false) 
-
-  // Keep track of zoom level to pass back to map on re-open
-  const zoomRef = useRef<number | null>(null);
 
   useEffect(() => {
     setOpen(isOpen)
@@ -38,9 +38,8 @@ export default function PositionSelectorModalComponent({
           <PositionSelectorMapComponent 
             selectedCenter={selectedCenter} 
             onPositionSelected={handleMapSelect}
-            selectedZoom={zoomRef.current}
-            onZoomChanged={z => { zoomRef.current = z.zoom }}
-            />
+            selectedZoom={selectedZoom}
+            onZoomChanged={onZoomChanged} />
         </DialogContent>
       </Dialog>
     </div>
