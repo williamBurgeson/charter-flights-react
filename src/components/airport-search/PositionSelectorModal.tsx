@@ -2,6 +2,7 @@ import Dialog from "@mui/material/Dialog"
 import PositionSelectorMapComponent, { type PositionSelectPayload } from "./PositionSelectorMapComponent"
 import { useEffect, useState } from "react"
 import { DialogContent, DialogTitle } from "@mui/material"
+import type { GeoPoint } from "../../models/geo-types"
 
 export default function PositionSelectorModalComponent({
   isOpen = false,
@@ -10,6 +11,7 @@ export default function PositionSelectorModalComponent({
 }: {
   isOpen?: boolean,
   selectedCenter?: GeoPoint | null,
+  selectedZoom?: number | null,
   onPositionSelected?: (p: PositionSelectPayload) => void
 }) {
   const [open, setOpen] = useState(false) 

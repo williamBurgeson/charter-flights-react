@@ -13,6 +13,7 @@ export default function CurrentPositionSelectorComponent() {
   const latitudeDisplay = Math.abs(latitude).toFixed(2);
   const longitudeDisplay = Math.abs(longitude).toFixed(2);
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [modalZoom, setModalZoom] = useState<number | null>(null);
 
   const { getCurrrentLocation } = useDistanceCalculator();
 
@@ -58,6 +59,7 @@ export default function CurrentPositionSelectorComponent() {
       )}
       <PositionSelectorModalComponent isOpen={modalIsOpen} 
           selectedCenter={{lat_decimal: latitude, lon_decimal: longitude}}
+          selectedZoom={modalZoom}
           onPositionSelected={(payload) => {
         if (payload.positionSelected !== null) {
           setLatitude(payload.positionSelected.lat_decimal);

@@ -9,9 +9,11 @@ export type PositionSelectPayload = {
 
 export default function PositionSelectorMapComponent({ 
   selectedCenter,
+  selectedZoom,
   onPositionSelected 
 }: { 
   selectedCenter?: GeoPoint | null,
+  selectedZoom?: number | null,
   onPositionSelected?: (p: PositionSelectPayload) => void 
 } = {}) {
 
@@ -34,7 +36,7 @@ export default function PositionSelectorMapComponent({
 
   return (
     <div className="position-selector-map-component">
-      <LeafletMapHostComponent centerGeoPoint={selectedCenter} onMapClick={handleMapClick} />
+      <LeafletMapHostComponent centerGeoPoint={selectedCenter} zoom={selectedZoom} onMapClick={handleMapClick} />
     </div>
   )
 }
