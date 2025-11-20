@@ -21,6 +21,8 @@ export type MarkerSelectPayload = {
 }
 export type MapBoundsPayload = { southWest: GeoPoint; northEast: GeoPoint; center: GeoPoint; zoom: number }
 export type MapBoundsCallback = (b: MapBoundsPayload) => void
+export type MapClickPayload = { lat: number; lon: number }
+export type MapClickCallback = (p: MapClickPayload) => void
 
 
 export default function LeafletMapHostComponent({
@@ -29,12 +31,14 @@ export default function LeafletMapHostComponent({
   mapUpdatedEvent,
   markers,
   onMarkerSelect,
+  onMapClick,
 }: {
   centerGeoPoint?: GeoPoint | null
   zoom?: number | null
   mapUpdatedEvent?: MapBoundsCallback
   markers?: MarkerData[]
   onMarkerSelect?: (p: MarkerSelectPayload) => void
+  onMapClick?: MapClickCallback
 }) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const boundsRef = useRef<L.LatLngBounds | null>(null)
@@ -70,17 +74,24 @@ export default function LeafletMapHostComponent({
   }, [onMarkerSelect])
 
   // Skeleton handler for clicks on the map (not markers).
-  // Currently just logs the clicked coordinates; kept small so it can be
-  // extended later to forward events to a parent via a prop.
-  const onMapClick = useCallback((e: L.LeafletMouseEvent) => {
+  // Logs clicked coordinates and forwards the payload to the optional
+  // `onMapClick` prop so a parent can handle map click events.
+  const handleMapClick = useCallback((e: L.LeafletMouseEvent) => {
     try {
       const lat = e.latlng.lat
       const lon = e.latlng.lng
       console.log('LeafletMapHostComponent: map clicked', { lat, lon, originalEvent: e })
+      try {
+        if (typeof onMapClick === 'function') {
+          onMapClick({ lat, lon })
+        }
+      } catch (pf) {
+        console.error('LeafletMapHostComponent: onMapClick handler threw', pf)
+      }
     } catch (err) {
-      console.error('LeafletMapHostComponent: error in onMapClick', err)
+      console.error('LeafletMapHostComponent: error in handleMapClick', err)
     }
-  }, [])
+  }, [onMapClick])
 
   const renderMarkers = useCallback((map: L.Map, markers?: MarkerData[]) => {
     if (!map) return
@@ -177,12 +188,12 @@ export default function LeafletMapHostComponent({
     updateBounds()
     map.on('moveend', updateBounds)
     // register the simple map click handler
-    map.on('click', onMapClick)
+    map.on('click', handleMapClick)
 
     return () => {
       try {
         map.off('moveend', updateBounds)
-        map.off('click', onMapClick)
+        map.off('click', handleMapClick)
         map.remove()
       } finally {
         if (host) {
