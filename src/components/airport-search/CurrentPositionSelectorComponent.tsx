@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import './CurrentPositionSelectorComponent.css'
 import { useDistanceCalculator } from '../../hooks/useDistanceCalculator'
-import PositionSelectorModalComponent from './PositionSelectorModal';
+import PositionSelectorModalComponent from './PositionSelectorModaComponentl';
 
 export default function CurrentPositionSelectorComponent() {
   const defaultLatitude = 50.0;
@@ -13,7 +13,8 @@ export default function CurrentPositionSelectorComponent() {
   const latitudeDisplay = Math.abs(latitude).toFixed(2);
   const longitudeDisplay = Math.abs(longitude).toFixed(2);
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [modalZoom, setModalZoom] = useState<number | null>(null);
+
+  const zoomRef = useRef<number | null>(null);
 
   const { getCurrrentLocation } = useDistanceCalculator();
 
@@ -59,7 +60,7 @@ export default function CurrentPositionSelectorComponent() {
       )}
       <PositionSelectorModalComponent isOpen={modalIsOpen} 
           selectedCenter={{lat_decimal: latitude, lon_decimal: longitude}}
-          selectedZoom={modalZoom}
+          selectedZoom={zoomRef.current}
           onPositionSelected={(payload) => {
         if (payload.positionSelected !== null) {
           setLatitude(payload.positionSelected.lat_decimal);
@@ -67,7 +68,8 @@ export default function CurrentPositionSelectorComponent() {
           setLocationSelected(true);
         }
         setModalIsOpen(false);
-      }} />
+      }} 
+      onZoomChanged={(z) => zoomRef.current = z.zoom} />  
     </div>
   )
 }

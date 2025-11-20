@@ -21,8 +21,12 @@ export type MarkerSelectPayload = {
 }
 export type MapBoundsPayload = { southWest: GeoPoint; northEast: GeoPoint; center: GeoPoint; zoom: number }
 export type MapBoundsCallback = (b: MapBoundsPayload) => void
+
 export type MapClickPayload = { lat: number; lon: number }
 export type MapClickCallback = (p: MapClickPayload) => void
+
+export type ZoomChangedPayload = { zoom: number }
+export type ZoomChangedCallback = (p: ZoomChangedPayload) => void
 
 
 export default function LeafletMapHostComponent({
@@ -32,6 +36,7 @@ export default function LeafletMapHostComponent({
   markers,
   onMarkerSelect,
   onMapClick,
+  onZoomChanged
 }: {
   centerGeoPoint?: GeoPoint | null
   zoom?: number | null
@@ -39,6 +44,7 @@ export default function LeafletMapHostComponent({
   markers?: MarkerData[]
   onMarkerSelect?: (p: MarkerSelectPayload) => void
   onMapClick?: MapClickCallback
+  onZoomChanged?: ZoomChangedCallback
 }) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const boundsRef = useRef<L.LatLngBounds | null>(null)
@@ -92,6 +98,23 @@ export default function LeafletMapHostComponent({
       console.error('LeafletMapHostComponent: error in handleMapClick', err)
     }
   }, [onMapClick])
+
+  // Skeleton handler for zoom changes initiated by user interaction
+  // inside the map (zoom control, pinch, scroll). Currently just logs
+  // the new zoom level; this can be extended later to forward the value
+  // to a parent via a prop or callback.
+  const handleZoomEnd = useCallback((e: L.LeafletEvent) => {
+    try {
+      const mapInstance = (e && (e.target as unknown as L.Map)) || null
+      const currentZoom = mapInstance ? mapInstance.getZoom() : undefined
+      if (typeof currentZoom === 'number' && typeof onZoomChanged === 'function') {
+        onZoomChanged({ zoom: currentZoom })
+      }
+      console.log('LeafletMapHostComponent: zoom ended, currentZoom=', currentZoom)
+    } catch (err) {
+      console.error('LeafletMapHostComponent: error in handleZoomEnd', err)
+    }
+  }, [onZoomChanged])
 
   const renderMarkers = useCallback((map: L.Map, markers?: MarkerData[]) => {
     if (!map) return
@@ -189,11 +212,14 @@ export default function LeafletMapHostComponent({
     map.on('moveend', updateBounds)
     // register the simple map click handler
     map.on('click', handleMapClick)
+    // register zoom-end handler so we can observe programmatic/user zoom changes
+    map.on('zoomend', handleZoomEnd)
 
     return () => {
       try {
         map.off('moveend', updateBounds)
         map.off('click', handleMapClick)
+        map.off('zoomend', handleZoomEnd)
         map.remove()
       } finally {
         if (host) {
@@ -202,7 +228,7 @@ export default function LeafletMapHostComponent({
         }
       }
     }
-  }, [centerGeoPoint, zoom, mapUpdatedEvent, renderMarkers])
+  }, [centerGeoPoint, zoom, mapUpdatedEvent, renderMarkers, handleMapClick, handleZoomEnd])
 
   // Update markers when the markers prop changes
   useEffect(() => {

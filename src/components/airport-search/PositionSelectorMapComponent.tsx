@@ -4,17 +4,20 @@ import type { GeoPoint } from '../../models/geo-types'
 
 export type PositionSelectPayload = {
   positionSelected: GeoPoint | null
+  zoomLevel?: number | null
   selectedAt: string // ISO timestamp
 }
 
 export default function PositionSelectorMapComponent({ 
   selectedCenter,
   selectedZoom,
-  onPositionSelected 
+  onPositionSelected,
+  onZoomChanged
 }: { 
   selectedCenter?: GeoPoint | null,
   selectedZoom?: number | null,
-  onPositionSelected?: (p: PositionSelectPayload) => void 
+  onPositionSelected?: (p: PositionSelectPayload) => void,
+  onZoomChanged?: (p: { zoom: number }) => void
 } = {}) {
 
   // Called when the Leaflet host reports a map click. Notify parent via
@@ -34,9 +37,23 @@ export default function PositionSelectorMapComponent({
     }
   }, [onPositionSelected])
 
+  const handleZoomChanged = useCallback((p: { zoom: number }) => {  
+    try {
+      if (typeof onZoomChanged === 'function') {
+        onZoomChanged(p)
+      }
+    } catch (e) {
+      console.error('PositionSelectorMapComponent: error handling zoom changed', e)
+    }
+  }, [onZoomChanged])
+
   return (
     <div className="position-selector-map-component">
-      <LeafletMapHostComponent centerGeoPoint={selectedCenter} zoom={selectedZoom} onMapClick={handleMapClick} />
+      <LeafletMapHostComponent 
+        centerGeoPoint={selectedCenter} 
+        zoom={selectedZoom} 
+        onMapClick={handleMapClick} 
+        onZoomChanged={handleZoomChanged} />
     </div>
   )
 }
