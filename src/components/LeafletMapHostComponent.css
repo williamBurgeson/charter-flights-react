@@ -1,0 +1,14 @@
+/* Fixed height map: full width on desktop, but keep same height on narrow screens so sides are clipped */
+.leaflet-map-container {
+  width: 100%;
+  max-width: 1200px;
+  height: 420px; /* fixed height */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* On very wide screens allow full-bleed feel */
+@media (min-width: 1400px) {
+  .map-container {
+    max-width: none;
+  }
+}

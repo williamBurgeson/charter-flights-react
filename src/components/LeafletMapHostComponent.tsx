@@ -7,6 +7,8 @@ import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import 'leaflet.markercluster'
 
+import './LeafletMapHostComponent.css'
+
 import type { GeoPoint } from '../models/geo-types'
 export type MarkerData = { id: string; lat: number; lon: number; title?: string; popupHtml?: string }
 // Payload sent to parent when a marker is selected/clicked. 
@@ -189,5 +191,5 @@ export default function LeafletMapHostComponent({
     }
   }, [markers, renderMarkers])
 
-  return <div className="map-container" ref={mapRef} aria-label="world map" />
+  return <div className="leaflet-map-container" ref={mapRef} aria-label="world map" />
 }
