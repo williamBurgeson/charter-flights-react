@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useMemo } from 'react'
 import LeafletMapHostComponent, { type MapBoundsPayload, type MarkerSelectPayload } from '../LeafletMapHostComponent'
-import './MapComponent.css'
+import './AirportsMapComponent.css'
 import { useContinentSearch } from '../../hooks/useContinentSearch'
 import type { Continent } from '../../models/continent.model'
 import type { GeoRegion } from '../../models/geo-types'
@@ -15,7 +15,7 @@ export type AirportSelectPayload = {
   selectedAt: string // ISO timestamp
 }
 
-export default function MapComponent({ onSelectedAirport }: { onSelectedAirport?: (p: AirportSelectPayload) => void } = {}) {
+export default function AirportsMapComponent({ onSelectedAirport }: { onSelectedAirport?: (p: AirportSelectPayload) => void } = {}) {
   const { findContinentsIntersectingRegion } = useContinentSearch()
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -41,7 +41,7 @@ export default function MapComponent({ onSelectedAirport }: { onSelectedAirport?
   const { getByCode: getAirportByCode } = useAirports()
 
   const handleMapUpdated = useCallback(async (b: MapBoundsPayload) => {
-    console.log('MapComponent: bounds changed', b)
+    console.log('AirportsMapComponent: bounds changed', b)
     const region: GeoRegion = { southWest: b.southWest, northEast: b.northEast }
     try {
       const list = await findContinentsIntersectingRegion(region)
@@ -63,7 +63,7 @@ export default function MapComponent({ onSelectedAirport }: { onSelectedAirport?
         lastSelectedAirportRef.current = null
         setLastSelectedAirport(null)
       }
-      console.log('MapComponent: continents in view', list)
+      console.log('AirportsMapComponent: continents in view', list)
 
       // Store center for caller debugging / current position usage
       centerRef.current = b.center
@@ -83,9 +83,9 @@ export default function MapComponent({ onSelectedAirport }: { onSelectedAirport?
       // Execute airport search and store results in state so the map host can render markers
       const airports = await searchAirports(params)
       setAirportsInView(airports)
-      console.log('MapComponent: airports found for current view', airports.length)
+      console.log('AirportsMapComponent: airports found for current view', airports.length)
     } catch (e) {
-      console.error('MapComponent: failed to get continents for bounds', e)
+      console.error('AirportsMapComponent: failed to get continents for bounds', e)
     }
   }, [findContinentsIntersectingRegion, searchAirports])
 
@@ -120,7 +120,7 @@ export default function MapComponent({ onSelectedAirport }: { onSelectedAirport?
       // If the same airport is clicked again, do not ignore it — still
       // notify listeners. We keep the cache lookup to avoid extra work.
       if (lastSelectedAirportRef.current && lastSelectedAirportRef.current.code === p.id) {
-        console.log('MapComponent: marker select (same as last) - will still notify listeners', p.id)
+        console.log('AirportsMapComponent: marker select (same as last) - will still notify listeners', p.id)
         // continue — we do not return here so onSelectedAirport is raised
       }
 
@@ -131,7 +131,7 @@ export default function MapComponent({ onSelectedAirport }: { onSelectedAirport?
         try {
           found = await getAirportByCode(p.id)
         } catch (fetchErr) {
-          console.warn('MapComponent: getAirportByCode failed for', p.id, fetchErr)
+          console.warn('AirportsMapComponent: getAirportByCode failed for', p.id, fetchErr)
           found = null
         }
         airportCacheRef.current.set(p.id, found)
@@ -147,12 +147,12 @@ export default function MapComponent({ onSelectedAirport }: { onSelectedAirport?
           onSelectedAirport({ airport: found, selectedAt: new Date().toISOString() })
         }
       } catch (nerr) {
-        console.error('MapComponent: onSelectedAirport handler threw', nerr)
+        console.error('AirportsMapComponent: onSelectedAirport handler threw', nerr)
       }
-      console.log('MapComponent: marker selected', p.id, found)
+      console.log('AirportsMapComponent: marker selected', p.id, found)
       // TODO: trigger any further actions (detail panel, fetch extra data, etc.)
     } catch (e) {
-      console.error('MapComponent: error handling marker select', e)
+      console.error('AirportsMapComponent: error handling marker select', e)
     }
   }, [getAirportByCode, onSelectedAirport])
 
