@@ -1,6 +1,4 @@
-// src/components/airport-search/NearestAirportsTableComponent.tsx
-import React from 'react'
-import './NearestAirportsTableComponent.css'
+import './NearestAirportsComponent.css'
 import CurrentPositionSelectorComponent from './CurrentPositionSelectorComponent'
 
 export default function NearestAirportsComponent() {

@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react'
 import { useDistanceCalculator } from '../../hooks/useDistanceCalculator'
 import type { AirportWithDistanceSearchInfo, AirportDistanceSearchOptions } from '../../hooks/useDistanceCalculator'
 import './NearestAirportsTableComponent.css'
+import type { ContinentCode } from '../../models/continent.model'
 
 type Props = {
   radius?: number
@@ -10,7 +11,7 @@ type Props = {
   useCurrentLocationIfAvailable?: boolean
   airportCodes?: string[]
   countryCodes?: string[]
-  continentCodes?: string[]
+  continentCodes?: ContinentCode[]
   auto?: boolean
 }
 

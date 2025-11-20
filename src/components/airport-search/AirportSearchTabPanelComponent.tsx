@@ -4,8 +4,8 @@ import Tab from '@mui/material/Tab'
 import Box from '@mui/material/Box'
 import '../common/tabs.css'
 import './AirportSearchTabPanelComponent.css'
-import MapComponent from './AirportsMapComponent'
-import NearestAirportsTableComponent from './NearestAirportsTableComponent'
+import NearestAirportsComponent from './NearestAirportsComponent'
+import AirportsMapComponent from './AirportsMapComponent'
 
 function TabPanel({ children, value, index }: { children?: React.ReactNode; value: number; index: number }) {
   return value === index ? <Box sx={{ p: 2 }}>{children}</Box> : null
@@ -26,7 +26,7 @@ export default function AirportSearchTabPanelComponent() {
 
         <TabPanel value={selectedTabIndex} index={0}>
           <div className="airport-search-tab-panel-by-maps">
-            <MapComponent />
+            <AirportsMapComponent />
           </div>
         </TabPanel>
         <TabPanel value={selectedTabIndex} index={1}>
@@ -36,7 +36,7 @@ export default function AirportSearchTabPanelComponent() {
         </TabPanel>
         <TabPanel value={selectedTabIndex} index={2}>
           <div className="airport-search-tab-panel-from-point">
-            <NearestAirportsTableComponent />
+            <NearestAirportsComponent />
           </div>
         </TabPanel>
       </Box>

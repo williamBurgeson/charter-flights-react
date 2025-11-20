@@ -1,6 +1,6 @@
 import Dialog from "@mui/material/Dialog"
 import PositionSelectorMapComponent, { type PositionSelectPayload } from "./PositionSelectorMapComponent"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { DialogContent, DialogTitle } from "@mui/material"
 import type { GeoPoint } from "../../models/geo-types"
 
