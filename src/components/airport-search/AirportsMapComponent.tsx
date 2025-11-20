@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback, useMemo } from 'react'
 import LeafletMapHostComponent, { type MapBoundsPayload, type MarkerSelectPayload } from '../LeafletMapHostComponent'
-import './AirportsMapComponent.css'
 import { useContinentSearch } from '../../hooks/useContinentSearch'
 import type { Continent } from '../../models/continent.model'
 import type { GeoRegion } from '../../models/geo-types'
@@ -157,7 +156,7 @@ export default function AirportsMapComponent({ onSelectedAirport }: { onSelected
   }, [getAirportByCode, onSelectedAirport])
 
   return (
-    <div className="map-component">
+    <div className="airports-map-component">
       <LeafletMapHostComponent mapUpdatedEvent={handleMapUpdated} markers={markers} onMarkerSelect={handleMarkerSelect} />
     </div>
   )

@@ -69,6 +69,19 @@ export default function LeafletMapHostComponent({
     }
   }, [onMarkerSelect])
 
+  // Skeleton handler for clicks on the map (not markers).
+  // Currently just logs the clicked coordinates; kept small so it can be
+  // extended later to forward events to a parent via a prop.
+  const onMapClick = useCallback((e: L.LeafletMouseEvent) => {
+    try {
+      const lat = e.latlng.lat
+      const lon = e.latlng.lng
+      console.log('LeafletMapHostComponent: map clicked', { lat, lon, originalEvent: e })
+    } catch (err) {
+      console.error('LeafletMapHostComponent: error in onMapClick', err)
+    }
+  }, [])
+
   const renderMarkers = useCallback((map: L.Map, markers?: MarkerData[]) => {
     if (!map) return
 
@@ -163,10 +176,13 @@ export default function LeafletMapHostComponent({
 
     updateBounds()
     map.on('moveend', updateBounds)
+    // register the simple map click handler
+    map.on('click', onMapClick)
 
     return () => {
       try {
         map.off('moveend', updateBounds)
+        map.off('click', onMapClick)
         map.remove()
       } finally {
         if (host) {
