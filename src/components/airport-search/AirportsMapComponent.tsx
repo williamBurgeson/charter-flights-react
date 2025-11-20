@@ -94,9 +94,9 @@ export default function AirportsMapComponent({
       }
 
       // Execute airport search and store results in state so the map host can render markers
-      const airports = await searchAirports(params)
-      setAirportsInView(airports)
-      console.log('AirportsMapComponent: airports found for current view', airports.length)
+      const airportSearchResults = await searchAirports(params)
+      setAirportsInView(airportSearchResults.airports)
+      console.log('AirportsMapComponent: airports found for current view', airportSearchResults.airports.length)
     } catch (e) {
       console.error('AirportsMapComponent: failed to get continents for bounds', e)
     }

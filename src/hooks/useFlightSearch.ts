@@ -32,8 +32,8 @@ export function useFlightSearch() {
     const candidateAirportsFrom = await searchAirports(params.airportFromSearchParams || {});
     const candidateAirportsTo = await searchAirports(params.airportToSearchParams || {});
 
-    const candidateAirportCodesFrom = candidateAirportsFrom.map(a => a.code);
-    const candidateAirportCodesTo = candidateAirportsTo.map(a => a.code);
+    const candidateAirportCodesFrom = candidateAirportsFrom.airports.map(a => a.code);
+    const candidateAirportCodesTo = candidateAirportsTo.airports.map(a => a.code);
 
     let candidateFlights = await filterByAirportCodes(candidateAirportCodesFrom, candidateAirportCodesTo, true);
 
