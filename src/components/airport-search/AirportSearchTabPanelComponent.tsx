@@ -4,7 +4,7 @@ import Tab from '@mui/material/Tab'
 import Box from '@mui/material/Box'
 import '../common/tabs.css'
 import './AirportSearchTabPanelComponent.css'
-import MapComponent from '../MapComponent'
+import MapComponent from './MapComponent'
 import NearestAirportsTableComponent from './NearestAirportsTableComponent'
 
 function TabPanel({ children, value, index }: { children?: React.ReactNode; value: number; index: number }) {

@@ -1,14 +1,14 @@
 import { useState, useRef, useCallback, useMemo } from 'react'
-import LeafletMapHostComponent, { type MapBoundsPayload, type MarkerSelectPayload } from './LeafletMapHostComponent'
+import LeafletMapHostComponent, { type MapBoundsPayload, type MarkerSelectPayload } from '../LeafletMapHostComponent'
 import './MapComponent.css'
-import { useContinentSearch } from '../hooks/useContinentSearch'
-import type { Continent } from '../models/continent.model'
-import type { GeoRegion } from '../models/geo-types'
-import { useAirportSearch } from '../hooks/useAirportSearch'
-import { useAirports } from '../hooks/data/useAirports'
-import type { Airport } from '../models/airport.model'
-import type { AirportSearchParams } from '../hooks/useAirportSearch'
-import type { ContinentCode } from '../models/continent.model'
+import { useContinentSearch } from '../../hooks/useContinentSearch'
+import type { Continent } from '../../models/continent.model'
+import type { GeoRegion } from '../../models/geo-types'
+import { useAirportSearch } from '../../hooks/useAirportSearch'
+import { useAirports } from '../../hooks/data/useAirports'
+import type { Airport } from '../../models/airport.model'
+import type { AirportSearchParams } from '../../hooks/useAirportSearch'
+import type { ContinentCode } from '../../models/continent.model'
 
 export type AirportSelectPayload = {
   airport: Airport | null

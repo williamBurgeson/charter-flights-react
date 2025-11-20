@@ -1,4 +1,4 @@
-import MapComponent from '../components/MapComponent'
+import MapComponent from '../components/airport-search/MapComponent'
 
 export default function MapPage() {
   return (
