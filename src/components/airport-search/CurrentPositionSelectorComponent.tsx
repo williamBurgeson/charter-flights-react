@@ -53,12 +53,12 @@ export default function CurrentPositionSelectorComponent({
         <div className="na-inputs">
           <label className="na-field na-field-left">
             <span className="na-field-label">Lat:</span>
-            <input className="na-coord-input" type="text" defaultValue={''} value={latitudeDisplay} aria-label="Latitude" readOnly={true} />°{northSouth()}
+            <input className="na-coord-input" type="text" value={latitudeDisplay} aria-label="Latitude" readOnly={true} />°{northSouth()}
           </label>
 
           <label className="na-field na-field-right">
             <span className="na-field-label">Lon:</span>
-            <input className="na-coord-input" type="text" defaultValue={''} value={longitudeDisplay} aria-label="Longitude" readOnly={true} />°{eastWest()}
+            <input className="na-coord-input" type="text" value={longitudeDisplay} aria-label="Longitude" readOnly={true} />°{eastWest()}
           </label>
 
           <div className="na-inputs-spacer" />

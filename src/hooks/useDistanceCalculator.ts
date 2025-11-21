@@ -1,10 +1,9 @@
 import { useCallback } from "react";
-import { useAirports } from "./data/useAirports";
-import { useTerritories } from "./data/useTerritories";
+
 import type { Airport } from "../models/airport.model";
 import type { ContinentCode } from "../models/continent.model";
 import type { GeoPoint } from "../models/geo-types";
-import type { AirportSearchParams } from "./useAirportSearch";
+import { useAirportSearch, type AirportSearchParams } from "./useAirportSearch";
 
 // --- Types ---
 export type DistanceUnit = "km" | "miles" | "nautical-miles";
@@ -17,6 +16,7 @@ export interface AirportDistanceSearchOptions extends AirportSearchParams {
   radius?: number;
   units?: DistanceUnit;
   useCurrentLocationIfAvailable: boolean;
+  sortByInfoFields?: Partial<Record<keyof InfoExceptAirport, "asc" | "desc">>;
 }
 
 export interface AirportWithDistanceSearchInfo {
@@ -25,6 +25,15 @@ export interface AirportWithDistanceSearchInfo {
   units: DistanceUnit;
   matchReason: MatchReason;
 }
+
+export interface AirportWithDistanceSearchInfoResults {
+  airportInfoItems: AirportWithDistanceSearchInfo[];
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;  
+}
+
+type InfoExceptAirport = Omit<AirportWithDistanceSearchInfo, 'airport'>;
 
 // --- Conversion constants ---
 const KM_PER_MILE = 1.60934;
@@ -58,6 +67,45 @@ function convertFromKilometers(distance: number, toUnit: DistanceUnit): number {
   }
 }
 
+function applySorting(
+  candidateResults: AirportWithDistanceSearchInfo[],
+  options: AirportDistanceSearchOptions
+): AirportWithDistanceSearchInfo[] {
+  const sortByInfoFields = options.sortByInfoFields;
+  if (!sortByInfoFields || Object.keys(sortByInfoFields).length === 0) {
+    return candidateResults;
+  }
+  return [...candidateResults].sort((a, b) => {
+    for (const key of Object.keys(sortByInfoFields) as (keyof InfoExceptAirport)[]) {
+      if (a[key] < b[key]) {
+        return sortByInfoFields[key] === "asc" ? -1 : 1;
+      } else if (a[key] > b[key]) {
+        return sortByInfoFields[key] === "asc" ? 1 : -1;
+      }
+    }
+    return 0;
+  });
+}
+
+function applyPaging(
+  items: AirportWithDistanceSearchInfo[],
+  options: AirportDistanceSearchOptions): AirportWithDistanceSearchInfo[] {
+    let pagedItems = items;
+  if (options.itemsFromBeginning !== undefined) {
+    pagedItems = pagedItems.slice(0, options.itemsFromBeginning);
+  }
+  if (options.itemsFromEnd !== undefined) {
+    const itemsFromEnd = options.itemsFromEnd;
+    pagedItems = pagedItems.slice(0 - itemsFromEnd);
+  }
+  if (options.pageIndex !== undefined && options.pageSize !== undefined) {
+  const start = options.pageIndex * options.pageSize;
+  pagedItems = pagedItems.slice(start, start + options.pageSize);
+  }
+  return pagedItems;
+}
+
+// Get current location using Geolocation API
 async function getCurrrentLocation(options?: { timeoutMs?: number; maximumAgeMs?: number }): Promise<GeoPoint | null> {
   if (typeof navigator === 'undefined' || !('geolocation' in navigator)) return null
 
@@ -127,56 +175,18 @@ function determineMatchReason(
 
 // --- Main hook ---
 export function useDistanceCalculator() {
-  //  Bring in your data access hooks
-  const { filterByCountryValues: filterAirportsByCountryValues, filterByCodeValues: filterAirportsByCodeValues, getAll: getAllAirports } = useAirports();
-  const { filterByContinentCodeValues : filterCountriesByContinentCodeValues, filterByCodeValues: filterCountriesByCodeValues } = useTerritories();
-  
-
-  // Internal helper that depends on those hooks
-  const getFilteredAirports = useCallback(async (
-    airportCodes?: string[],
-    countryCodes?: string[],
-    continentCodes?: ContinentCode[]
-  ): Promise<Airport[]> => {
-
-    // Resolve countries
-    const [countriesFromContinents, countriesFromCodes] = await Promise.all([
-      continentCodes?.length ? filterCountriesByContinentCodeValues(continentCodes) : [],
-      countryCodes?.length ? filterCountriesByCodeValues(countryCodes) : []
-    ]);
-
-    const combinedCountries = [
-      ...countriesFromContinents.filter(
-        c => !countriesFromCodes.some(cc => cc.code === c.code)
-      ),
-      ...countriesFromCodes
-    ];
-
-
-    // Retrieve airports
-    const [airportsFromCountries, airportsFromCodes] = await Promise.all([
-      combinedCountries.length
-        ? filterAirportsByCountryValues(combinedCountries.map(c => c.code))
-        : [],
-      airportCodes?.length
-        ? filterAirportsByCodeValues(airportCodes)
-        : []
-    ]);
-
-    const combinedAirports = [
-      ...airportsFromCountries.filter(a => !airportsFromCodes.some(ac => ac.code === a.code)),
-      ...airportsFromCodes
-    ];
-
-    return combinedAirports;
-  }, [filterAirportsByCountryValues, filterAirportsByCodeValues, filterCountriesByContinentCodeValues, filterCountriesByCodeValues]);
+  const { searchAirports } = useAirportSearch();
 
   // Public method: find airports near a given location
   // Returns null if location could not be determined; either because
   // lat/lon were not provided or geolocation could not determine location
   const findNearbyAirports = useCallback(async (
     options: AirportDistanceSearchOptions
-  ): Promise<AirportWithDistanceSearchInfo[] | null> => {
+  ): Promise<AirportWithDistanceSearchInfoResults | null> => {
+
+    //just some pre-cleaning
+    options ??= { useCurrentLocationIfAvailable: false };
+    options.applyFiltersBeforeDistanceCalculations = false;
 
     const {
       maxResults, radius,
@@ -200,18 +210,11 @@ export function useDistanceCalculator() {
 
     validateCoordinates(centerLat, centerLon);
 
-    // helper to load candidate airports; keeps branching logic local so
-    // `candidateAirports` can be a const and the control flow is easier to read
-    const loadCandidateAirports = async (): Promise<Airport[]> => {
-      if (!airportCodes?.length && !countryCodes?.length && !continentCodes?.length) {
-        return await getAllAirports();
-      }
-      return await getFilteredAirports(airportCodes, countryCodes, continentCodes);
-    }
+    const airportSearchResults = await searchAirports(options);
 
-    const candidateAirports = await loadCandidateAirports();
+    const candidateAirports = airportSearchResults.airports;
 
-    const results = candidateAirports.map(airport => {
+    let candidateResults = candidateAirports.map(airport => {
       const distKm = calculateDistance(
         { lat_decimal: centerLat, lon_decimal: centerLon },
         airport
@@ -225,18 +228,27 @@ export function useDistanceCalculator() {
     });
 
     // Optional filtering and sorting
-    let filtered = results;
+    // let filtered = candidateResults;
     if (radius !== undefined) {
       const radiusKm = convertToKilometers(radius, units);
-      filtered = results
+      candidateResults = candidateResults
         .filter(r => convertToKilometers(r.distance, units) <= radiusKm)
         .map(r => ({ ...r, matchReason: "within-radius" }));
     }
 
-    filtered.sort((a, b) => a.distance - b.distance);
-    return maxResults ? filtered.slice(0, maxResults) : filtered;
+    candidateResults = applySorting(candidateResults, options);
 
-  }, [getAllAirports, getFilteredAirports]);
+    candidateResults = applyPaging(candidateResults, options);
+
+    candidateResults = maxResults ? candidateResults.slice(0, maxResults) : candidateResults;
+
+    return { airportInfoItems: candidateResults,
+      totalCount: candidateResults.length,
+      pageIndex: options.pageIndex ?? 0,
+      pageSize: options.pageSize ?? candidateResults.length,
+    };
+
+  }, [searchAirports]);
 
   // Public API
   return { getCurrrentLocation, calculateDistance, findNearbyAirports };

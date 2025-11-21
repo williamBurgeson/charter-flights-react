@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react'
 import { useDistanceCalculator } from '../../hooks/useDistanceCalculator'
-import type { AirportWithDistanceSearchInfo, AirportDistanceSearchOptions } from '../../hooks/useDistanceCalculator'
+import type { AirportWithDistanceSearchInfo, AirportDistanceSearchOptions, AirportWithDistanceSearchInfoResults } from '../../hooks/useDistanceCalculator'
 import './NearestAirportsTableComponent.css'
 import type { ContinentCode } from '../../models/continent.model'
 import type { GeoPoint } from '../../models/geo-types'
@@ -30,7 +30,7 @@ export default function NearestAirportsTableComponent({
 }: Props) {
   const { findNearbyAirports } = useDistanceCalculator()
   const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState<AirportWithDistanceSearchInfo[] | null>(null)
+  const [results, setResults] = useState<AirportWithDistanceSearchInfoResults | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -47,7 +47,7 @@ export default function NearestAirportsTableComponent({
         airportCodes,
         countryCodes,
         continentCodes,
-        
+        sortByInfoFields: { distance: 'asc' },
       }
       const r = await findNearbyAirports(opts)
       setResults(r)
@@ -72,7 +72,7 @@ export default function NearestAirportsTableComponent({
 
       {results === null ? (
         <div className="nearest-airports-empty">No results — click "Find Nearby Airports" to search.</div>
-      ) : results.length === 0 ? (
+      ) : results.airportInfoItems.length === 0 ? (
         <div className="nearest-airports-empty">No nearby airports found.</div>
       ) : (
         <table className="nearest-airports-table">
@@ -85,7 +85,7 @@ export default function NearestAirportsTableComponent({
             </tr>
           </thead>
           <tbody>
-            {results.map((r) => (
+            {results.airportInfoItems.map((r) => (
               <tr key={r.airport.code}>
                 <td>{r.airport.code}</td>
                 <td>{r.airport.name}</td>

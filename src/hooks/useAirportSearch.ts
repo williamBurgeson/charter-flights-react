@@ -19,16 +19,17 @@ export interface LatLonBoundsAirportSearchParams {
   minLongitude?: number;
 }
 
+type SortByAirportFieldsType = Partial<Record<keyof Airport, "asc" | "desc">>;
+
 export interface AirportSearchParams 
   extends HierarchicalAirportSearchParams, LatLonBoundsAirportSearchParams { 
   itemsFromBeginning?: number;
   itemsFromEnd?: number;
   pageIndex?: number;
   pageSize?: number;
-  sortBy?: Record<keyof Airport, "asc" | "desc">;
+  sortByAirportFields?: SortByAirportFieldsType;
   applyFiltersBeforeDistanceCalculations?: boolean;
 }
-
   
 export interface AirportSearchResult {
   airports: Airport[];
@@ -48,8 +49,9 @@ function latLonBoundsParamsAreEmpty(params: LatLonBoundsAirportSearchParams): bo
   );
 } 
 
-function sortingParamsAreEmpty(params: Record<keyof Airport, "asc" | "desc"> | undefined): boolean {
-  return !params || Object.keys(params).length === 0;
+function sortingParamsAreEmpty(params: AirportSearchParams): boolean {
+  const sortBy = params.sortByAirportFields as SortByAirportFieldsType | undefined;
+  return !sortBy || Object.keys(sortBy).length === 0;
 }
 
 function pagingParamsAreEmpty(params: AirportSearchParams): boolean {
@@ -59,20 +61,22 @@ function pagingParamsAreEmpty(params: AirportSearchParams): boolean {
   );
 }
 
-function applySorting(airports: Airport[], sortBy: Record<keyof Airport, "asc" | "desc">): Airport[] {
-  if (sortingParamsAreEmpty(sortBy)) {
+function applySorting(airports: Airport[], params: AirportSearchParams): Airport[] {
+  if (sortingParamsAreEmpty(params)) {
     return airports;
   }
+  const sortBy = params.sortByAirportFields as SortByAirportFieldsType;
   return [...airports].sort((a, b) => {
-    for (const key of Object.keys(sortBy) as (keyof Airport)[]) {
+    for (const key of Object.keys(sortBy!) as (keyof Airport)[]) {
       if (a[key] < b[key]) {
-        return sortBy[key] === "asc" ? -1 : 1;
+        return sortBy![key] === "asc" ? -1 : 1; 
       } else if (a[key] > b[key]) {
-        return sortBy[key] === "asc" ? 1 : -1;
+        return sortBy![key] === "asc" ? 1 : -1;
       }
     }
     return 0;
-  });
+  }
+  );
 }
 
 function applyPaging(airports: Airport[], params: AirportSearchParams): Airport[] {
@@ -126,7 +130,6 @@ export function useAirportSearch() {
       // returned directly by code over those inferred from continent membership, as in the future the data may be
       // enhanced for countries specifically selected rather than all countries in a continent.
       if (params.countryCodes?.length) {
-
         const countriesFromCodes = await filterCountriesByCodeValues(params.countryCodes);
         candidateTerritories = [
           ...countriesFromContinents.filter(
@@ -226,8 +229,8 @@ export function useAirportSearch() {
       pagingParamsAreEmpty(params)) {
       // No filters or paging provided, get all airports
 
-      if (!sortingParamsAreEmpty(params.sortBy)) {
-        candidateAirports = applySorting(candidateAirports, params.sortBy!);
+      if (!sortingParamsAreEmpty(params)) {
+        candidateAirports = applySorting(candidateAirports, params.sortByAirportFields!);
       }
 
       return { 
@@ -245,8 +248,8 @@ export function useAirportSearch() {
     if (!params.applyFiltersBeforeDistanceCalculations || pagingParamsAreEmpty(params)) {
       const totalCount = candidateAirports.length;
 
-      if (!sortingParamsAreEmpty(params.sortBy)) {
-        candidateAirports = applySorting(candidateAirports, params.sortBy!);
+      if (!sortingParamsAreEmpty(params)) {
+        candidateAirports = applySorting(candidateAirports, params);
       } 
 
       candidateAirports = applyPaging(candidateAirports, params);
@@ -258,7 +261,7 @@ export function useAirportSearch() {
       };
     }
     
-    candidateAirports = applySorting(candidateAirports, params.sortBy!);
+    candidateAirports = applySorting(candidateAirports, params.sortByAirportFields!);
 
     candidateAirports = applyPaging(candidateAirports, params);
 
