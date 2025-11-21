@@ -14,18 +14,22 @@ type Props = {
   airportCodes?: string[]
   countryCodes?: string[]
   continentCodes?: ContinentCode[]
+  pageIndex?: number
+  pageSize?: number
   auto?: boolean
 }
 
 export default function NearestAirportsTableComponent({
   currentPosition,
-  radius = 10000,
-  maxResults = 10,
+  radius,
+  maxResults,
   units = 'km',
   useCurrentLocationIfAvailable = true,
   airportCodes,
   countryCodes,
   continentCodes,
+  pageIndex = 0,
+  pageSize = 10,
   auto = false,
 }: Props) {
   const { findNearbyAirports } = useDistanceCalculator()
@@ -47,6 +51,8 @@ export default function NearestAirportsTableComponent({
         airportCodes,
         countryCodes,
         continentCodes,
+        pageIndex,
+        pageSize,
         sortByInfoFields: { distance: 'asc' },
       }
       const r = await findNearbyAirports(opts)
