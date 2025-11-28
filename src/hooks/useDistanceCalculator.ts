@@ -9,6 +9,8 @@ import { useAirportSearch, type AirportSearchParams } from "./useAirportSearch";
 export type DistanceUnit = "km" | "miles" | "nautical-miles";
 export type MatchReason = "within-radius" | "nearest-N" | "continent-match";
 
+export type SortByInfoFieldsType = Partial<Record<keyof Omit<AirportWithDistanceSearchInfo, 'airport'>, 'asc' | 'desc'>>;
+
 export interface AirportDistanceSearchOptions extends AirportSearchParams {
   centerLat?: number;
   centerLon?: number;
@@ -16,7 +18,7 @@ export interface AirportDistanceSearchOptions extends AirportSearchParams {
   radius?: number;
   units?: DistanceUnit;
   useCurrentLocationIfAvailable: boolean;
-  sortByInfoFields?: Partial<Record<keyof InfoExceptAirport, "asc" | "desc">>;
+  sortByInfoFields?: SortByInfoFieldsType;
 }
 
 export interface AirportWithDistanceSearchInfo {
