@@ -5,8 +5,9 @@
   width: 425px;
   height: 240px;
   background-image: url(plane-in-sky.png);
-  background-size: contain;
+  background-size: cover;
   background-repeat: no-repeat;
+  background-position-x: center;
 }
 
 .table-box.loading .loading-text {
