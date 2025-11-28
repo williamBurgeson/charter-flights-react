@@ -36,13 +36,20 @@
   color: #444;
 }
 .current-position-selector .na-coord-input {
-  width:45px;
+  width:52px;
   padding: 0.25rem 0;
   border: 1px solid #ccc;
   border-radius: 3px;
   font-size: 0.95rem;
   box-sizing: border-box;
+  text-align: center;
 }
+
+.current-position-selector .na-field-left .na-coord-input { width: 70px; 
+    width:45px;
+    padding-left: 0.05rem;
+}
+
 .current-position-selector .na-change-btn {
   padding: 0.35rem 0.6rem;
   border-radius: 4px;

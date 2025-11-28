@@ -11,38 +11,52 @@ export default function CurrentPositionSelectorComponent({
 ) {
   const defaultLatitude = 50.0;
   const defaultLongitude = 0.0;
-  const [latitude, setLatitude] = useState(defaultLatitude)
-  const [longitude, setLongitude] = useState(defaultLongitude)
+  const defaultLocation: GeoPoint = { lat_decimal: defaultLatitude, lon_decimal: defaultLongitude };
+  const [referencePosoition, setReferencePosition] = useState<GeoPoint | null>(null);
+  // const [latitude, setLatitude] = useState(defaultLatitude)
+  // const [longitude, setLongitude] = useState(defaultLongitude)
   const [locationAvailable, setLocationAvailable] = useState<boolean>(false);
   const [locationSelected, setLocationSelected] = useState<boolean>(false); 
-  const latitudeDisplay = Math.abs(latitude).toFixed(2);
-  const longitudeDisplay = Math.abs(longitude).toFixed(2);
+  const latitudeDisplay = Math.abs(referencePosoition?.lat_decimal ?? defaultLatitude).toFixed(2);
+  const longitudeDisplay = Math.abs(referencePosoition?.lon_decimal ?? defaultLongitude).toFixed(2);
   const [modalIsOpen, setModalIsOpen] = useState(false);
 
   const zoomRef = useRef<number | null>(null);
 
   const { getCurrrentLocation } = useDistanceCalculator();
 
-  const northSouth = useCallback(() => latitude >= 0 ? 'N' : 'S', [latitude])
-  const eastWest = useCallback(() => longitude >= 0 ? 'E' : 'W', [longitude])
+  const northSouth = useCallback(() => referencePosoition?.lat_decimal ?? defaultLatitude >= 0 ? 'N' : 'S', [referencePosoition])
+  const eastWest = useCallback(() => referencePosoition?.lon_decimal ?? defaultLongitude >= 0 ? 'E' : 'W', [referencePosoition])
 
   const applySelection = () => {
-    const payload = { lat_decimal: latitude, lon_decimal: longitude }
-    onPositionSelected?.(payload)
+    const payload = { lat_decimal: referencePosoition?.lat_decimal ?? defaultLatitude, lon_decimal: referencePosoition?.lon_decimal ?? defaultLongitude }
     setLocationSelected(true)
+    onPositionSelected?.(payload)
   }
 
   useEffect(() => {
     async function fetchLocation() {
-      const location = await getCurrrentLocation(); 
-      if (location !== null) {
+      if (referencePosoition === null) {
+        const currentLocation = await getCurrrentLocation(); 
+
+        setReferencePosition(currentLocation ?? defaultLocation);
+        if (currentLocation === null) {
+          setLocationAvailable(false);
+          onPositionSelected?.(null);
+          return;
+        }
+      }
+      else {
         setLocationAvailable(true);
-        setLatitude(location.lat_decimal);
-        setLongitude(location.lon_decimal);
+        onPositionSelected?.({ lat_decimal: referencePosoition.lat_decimal, lon_decimal: referencePosoition.lon_decimal });
+        return;
       }
     }
     fetchLocation();
-  }, [getCurrrentLocation]);
+ 
+  }, [getCurrrentLocation, locationAvailable, referencePosoition, onPositionSelected, defaultLocation]);
+
+
 
 
   return (
@@ -70,14 +84,11 @@ export default function CurrentPositionSelectorComponent({
         <div className="na-location-unavailable">Current location unavailable - defaulting to 50°N, 0°E</div>
       )}
       <PositionSelectorModalComponent isOpen={modalIsOpen} 
-          selectedCenter={{lat_decimal: latitude, lon_decimal: longitude}}
+          selectedCenter={{lat_decimal: referencePosoition?.lat_decimal ?? defaultLatitude, lon_decimal: referencePosoition?.lon_decimal ?? defaultLongitude}}
           selectedZoom={zoomRef.current}
           onPositionSelected={(payload) => {
         if (payload.positionSelected !== null) {
-          setLatitude(payload.positionSelected.lat_decimal);
-          setLongitude(payload.positionSelected.lon_decimal);
-          setLocationSelected(true);
-          onPositionSelected?.(payload.positionSelected);
+          setReferencePosition(payload.positionSelected);
           applySelection();
         }
         setModalIsOpen(false);

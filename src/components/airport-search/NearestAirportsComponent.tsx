@@ -9,8 +9,8 @@ export default function NearestAirportsComponent() {
 
   return (
     <div className="nearest-airports">
-      <div className="nearest-airports-header">Nearest airports (skeleton)</div>
-      <CurrentPositionSelectorComponent onPositionSelected={setCurrentPosition} />
+      <div className="nearest-airports-header">Nearest airports</div>
+      <CurrentPositionSelectorComponent onPositionSelected={(p) => setCurrentPosition(p)} />
       <NearestAirportsTableComponent currentPosition={currentPosition}  />
     </div>
   )

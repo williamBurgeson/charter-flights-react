@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useDistanceCalculator } from '../../hooks/useDistanceCalculator'
-import type { AirportWithDistanceSearchInfo, AirportDistanceSearchOptions, AirportWithDistanceSearchInfoResults } from '../../hooks/useDistanceCalculator'
+import type { AirportDistanceSearchOptions, AirportWithDistanceSearchInfoResults, SortByInfoFieldsType } from '../../hooks/useDistanceCalculator'
 import './NearestAirportsTableComponent.css'
 import type { ContinentCode } from '../../models/continent.model'
 import type { GeoPoint } from '../../models/geo-types'
@@ -14,24 +14,25 @@ type Props = {
   airportCodes?: string[]
   countryCodes?: string[]
   continentCodes?: ContinentCode[]
+  sortByInfoFields?: SortByInfoFieldsType
   pageIndex?: number
   pageSize?: number
   auto?: boolean
 }
 
-export default function NearestAirportsTableComponent({
-  currentPosition,
-  radius,
-  maxResults,
-  units = 'km',
-  useCurrentLocationIfAvailable = true,
-  airportCodes,
-  countryCodes,
-  continentCodes,
-  pageIndex = 0,
-  pageSize = 10,
-  auto = false,
-}: Props) {
+export default function NearestAirportsTableComponent(props: Props) {
+  const {
+    currentPosition,
+    radius,
+    maxResults,
+    units = 'km',
+    useCurrentLocationIfAvailable = true,
+    airportCodes,
+    countryCodes,
+    continentCodes,
+    sortByInfoFields = { distance: 'asc' },
+    pageIndex = 0,
+    pageSize = 10 } = props;
   const { findNearbyAirports } = useDistanceCalculator()
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<AirportWithDistanceSearchInfoResults | null>(null)
@@ -51,9 +52,9 @@ export default function NearestAirportsTableComponent({
         airportCodes,
         countryCodes,
         continentCodes,
+        sortByInfoFields,
         pageIndex,
         pageSize,
-        sortByInfoFields: { distance: 'asc' },
       }
       const r = await findNearbyAirports(opts)
       setResults(r)
@@ -65,11 +66,12 @@ export default function NearestAirportsTableComponent({
     } finally {
       setLoading(false)
     }
-  }, [currentPosition?.lat_decimal, currentPosition?.lon_decimal, radius, maxResults, units, useCurrentLocationIfAvailable, airportCodes, countryCodes, continentCodes, findNearbyAirports])
+  }, [currentPosition?.lat_decimal, currentPosition?.lon_decimal, radius, maxResults, units, useCurrentLocationIfAvailable, airportCodes, countryCodes, continentCodes, sortByInfoFields, pageIndex, pageSize, findNearbyAirports])
 
-  React.useEffect(() => {
+  useEffect(() => {
     load()
-  }, [auto, load])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props])
 
   return (
     <div className="nearest-airports">
