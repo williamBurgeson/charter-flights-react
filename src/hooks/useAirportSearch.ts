@@ -245,6 +245,9 @@ export function useAirportSearch() {
 
     candidateAirports = (await filterAirportsByLatLonBounds(params, candidateAirports))!
 
+    // IMPORTANT: this functionality is also called from the distance calculator hook,
+    // which may want to do filtering before distance calculations and defer sorting/paging
+    // until after distances have been calculated. So we need to support that use case here.
     if (!params.applyFiltersBeforeDistanceCalculations || pagingParamsAreEmpty(params)) {
       const totalCount = candidateAirports.length;
 
@@ -252,7 +255,6 @@ export function useAirportSearch() {
         candidateAirports = applySorting(candidateAirports, params);
       } 
 
-      candidateAirports = applyPaging(candidateAirports, params);
       return {
         airports: candidateAirports,
         totalCount,
