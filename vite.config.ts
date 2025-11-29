@@ -1,8 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { env } from 'process'
 
-const base = env.BASE_URL?.includes('github.io') ?  '/charter-flights-react/' : '/'
+// not sure how to make this dynamic based on environment as it is a build time setting
+// maybe based on env variable? - but not important enough to tackle at the moment
+
+//const base = '/'
+const base = '/charter-flights-react'
 
 // https://vite.dev/config/
 export default defineConfig({
