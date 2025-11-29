@@ -68,9 +68,11 @@ function applySorting(airports: Airport[], params: AirportSearchParams): Airport
   const sortBy = params.sortByAirportFields as SortByAirportFieldsType;
   return [...airports].sort((a, b) => {
     for (const key of Object.keys(sortBy!) as (keyof Airport)[]) {
-      if (a[key] < b[key]) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((a[key] as any) < (b[key] as any)) {
         return sortBy![key] === "asc" ? -1 : 1; 
-      } else if (a[key] > b[key]) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } else if ((a[key] as any) > (b[key] as any)) {
         return sortBy![key] === "asc" ? 1 : -1;
       }
     }

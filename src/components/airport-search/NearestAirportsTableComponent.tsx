@@ -34,7 +34,8 @@ export default function NearestAirportsTableComponent(props: Props) {
     pageIndex = 0,
     pageSize = 10 } = props;
   const { findNearbyAirports } = useDistanceCalculator()
-  const [loading, setLoading] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_loading_, setLoading] = useState(false)
   const [results, setResults] = useState<AirportWithDistanceSearchInfoResults | null>(null)
   const [error, setError] = useState<string | null>(null)
 
