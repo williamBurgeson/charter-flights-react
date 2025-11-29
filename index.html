@@ -5,6 +5,70 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>charter-flights-react</title>
+    <script type="text/javascript">
+      // Single Page Apps for GitHub Pages
+      // MIT License
+      // https://github.com/rafgraph/spa-github-pages
+      // This script checks to see if a redirect is present in the query string,
+      // converts it back into the correct url and adds it to the
+      // browser's history using window.history.replaceState(...),
+      // which won't cause the browser to attempt to load the new url.
+      // When the single page app is loaded further down in this file,
+      // the correct url will be waiting in the browser's history for
+      // the single page app to route accordingly.
+      (function(loc) {
+        console.log('loc=', loc);
+
+        const siteBasePathSegments = loc.hostname.includes('github.io') ? 1 : 0;
+        console.log('siteBasePathSegments=', siteBasePathSegments);
+        const baseHostName = loc.protocol + '//' + loc.hostname + (loc.port ? ':' + loc.port : '');
+        console.log('baseHostName=', baseHostName);
+        const pathToSiteRoot = baseHostName + loc.pathname.split('/').slice(0, 1 + siteBasePathSegments).join('/') + '/';
+        console.log('pathToSiteRoot=', pathToSiteRoot);
+
+        if ([baseHostName, pathToSiteRoot].includes(loc.href)) {
+          console.log("Request is for site root or base host, no redirect needed.", loc.href);
+          return; 
+        }
+
+        const pathAndQueryInsideApp = loc.href.slice(pathToSiteRoot.length);
+        console.log('pathAndQueryInsideApp=', pathAndQueryInsideApp);
+
+
+        if(!pathAndQueryInsideApp.startsWith('?path=')) {
+          const targetUrl = pathToSiteRoot + '?path=' + encodeURI(pathAndQueryInsideApp);
+          console.log("Request for sub-page of site: performing redirect to ", targetUrl);
+          window.location.replace(targetUrl);
+          return;
+        }
+
+        //ok, supporting deep linking is interesting but we've got other proirities right now,
+        //so for now just redirect to site root and let app load normally
+        window.location.replace(pathToSiteRoot);
+        
+
+
+      //   if (!loc.pathname.includes('.*/?/' && !pathInsideApp)) { 
+      //     console.log("No redirect found in URL, no action needed.", loc.toString());
+      //     return; 
+      //   } else if (!pathInsideApp) {
+      //     console.log(", no action needed.", loc.toString());
+      //     return; 
+      //   }
+
+      
+      //   const [pagePath, encodedQueryString] = loc.split('&!!');
+      //   const decodedQueryString = encodedQueryString ? encodedQueryString.replace(/~and~/g, '&') : '';
+      //   const [siteBasePath, encodedAppPath] = pagePath.split('/?/').slice(0, 2);
+        
+      //   window.history.replaceState(null, null,
+      //       siteBasePath +
+      //       (encodedAppPath ? '/' + encodedAppPath.replace(/~and~/g, '/') : '') +
+      //       (decodedQueryString ? '?' + decodedQueryString : '') +
+      //       loc.hash);
+      }(window.location))
+    </script>
+    <!-- End Single Page Apps for GitHub Pages -->
   </head>
   <body>
     <div id="root"></div>

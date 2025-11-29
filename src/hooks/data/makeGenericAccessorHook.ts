@@ -29,7 +29,8 @@ export function makeGenericAccessorHook<
   T extends RecordEntity,
   U extends readonly (keyof T)[] = readonly (keyof T)[],
   N extends readonly (keyof T)[] = readonly (keyof T)[]
->(url: string, metadata?: Metadata<T, U, N>) {
+>(url: string, 
+  metadata?: Metadata<T, U, N>) {
   type UKeys = U extends readonly (keyof T)[] ? U : readonly (keyof T)[]
   type NKeys = N extends readonly (keyof T)[] ? N : readonly (keyof T)[]
 
@@ -41,12 +42,16 @@ export function makeGenericAccessorHook<
     NonUniqueFilters<T, NKeys> &
     NonUniqueValueFilters<T, NKeys>
 
+  const siteBaseUrl : string = import.meta.env.VITE_API_BASE_URL || ''
+  const jsonResourceUrl = siteBaseUrl +
+    (siteBaseUrl.endsWith('/') ? '' : '/') + url
+
   return function useAccessor(): Generated {
     const fetchData = useFetchData()
 
     // Concrete, always-present callbacks
     const getAll = useCallback(async () => {
-      const data = await fetchData<T>(url)
+      const data = await fetchData<T>(jsonResourceUrl)
       return data
     }, [fetchData])
 

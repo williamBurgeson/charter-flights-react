@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Single Page Apps for GitHub Pages</title>
+    <script type="text/javascript">
+      // Single Page Apps for GitHub Pages
+      // MIT License
+      // https://github.com/rafgraph/spa-github-pages
+      // This script takes the current url and converts the path and query
+      // string into just a query string, and then redirects the browser
+      // to the new url with only a query string and hash fragment,
+      // e.g. https://www.foo.tld/one/two?a=b&c=d#qwe, becomes
+      // https://www.foo.tld/?/one/two&a=b~and~c=d#qwe
+      // Note: this 404.html file must be at least 512 bytes for it to work
+      // with Internet Explorer (it is currently > 512 bytes)
+
+      // If you're creating a Project Pages site and NOT using a custom domain,
+      // then set pathSegmentsToKeep to 1 (enterprise users may need to set it to > 1).
+      // This way the code will only replace the route part of the path, and not
+      // the real directory in which the app resides, for example:
+      // https://username.github.io/repo-name/one/two?a=b&c=d#qwe becomes
+      // https://username.github.io/repo-name/?/one/two&a=b~and~c=d#qwe
+      // Otherwise, leave pathSegmentsToKeep as 0.
+      // const pathSegmentsToKeep = 0;
+
+      // const loc = window.location;
+      // l.replace(
+      //   l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      //   l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+      //   l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+      //   (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+      //   l.hash
+      // );
+    
+      console.log("Deeplinks; 404.html will reconsistute the URL and redirect to home with paths escaped to query string and query string escaped, and home will rebuild.");
+      const loc = window.location;
+      console.log('loc=', loc);
+      const siteBasePathSegments = loc.hostname.includes('github.io') ? 1 : 0;
+      console.log('siteBasePathSegments=', siteBasePathSegments);
+      const baseHostName = loc.protocol + '//' + loc.hostname + (loc.port ? ':' + loc.port : '');
+      console.log('baseHostName=', baseHostName);
+      const pathToSiteRoot = loc.pathname.split('/').slice(0, 1 + siteBasePathSegments).join('/') + '/';
+      console.log('pathToSiteRoot=', pathToSiteRoot);
+      const pathInsideApp = loc.pathname ? loc.pathname.slice(1).split('/').slice(siteBasePathSegments).join('/') : '';
+      console.log('pathInsideApp=', pathInsideApp);
+      const escapedQueryString = loc.search ? '&!!' + loc.search.slice(1).replace(/&/g, '~and~') : '';
+      console.log('escapedQueryString=', escapedQueryString);
+
+
+      loc.replace(
+        loc.protocol + '//' + loc.hostname + (loc.port ? ':' + loc.port : '') +
+        loc.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+        loc.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (loc.search ? '&' + loc.search.slice(1).replace(/&/g, '~and~') : '') +
+        loc.hash
+      );
+
+
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

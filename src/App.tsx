@@ -37,7 +37,7 @@ function App() {
   }, [triggerSeed, flightSeederResource])
 
   //const basename = '/charter-flights-react'
-  const basename = ''
+  const basename = window.location.toString().includes('github.io') ?  '/charter-flights-react/' : '/'
 
   return (
     <>
