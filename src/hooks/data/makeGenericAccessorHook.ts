@@ -42,7 +42,7 @@ export function makeGenericAccessorHook<
     NonUniqueFilters<T, NKeys> &
     NonUniqueValueFilters<T, NKeys>
 
-  const siteBaseUrl : string = import.meta.env.VITE_API_BASE_URL || ''
+  const siteBaseUrl : string = window?.location?.href.includes('github.io') ?  '/charter-flights-react/' : '/'
   const jsonResourceUrl = siteBaseUrl +
     (siteBaseUrl.endsWith('/') ? '' : '/') + url
 
