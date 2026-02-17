@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 // maybe based on env variable? - but not important enough to tackle at the moment
 
 //const base = '/'
-const base = '/charter-flights-react'
+const base = process.env.VITE_BASE_URL || '/'
 
 // https://vite.dev/config/
 export default defineConfig({
